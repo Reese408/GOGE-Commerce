@@ -9,6 +9,7 @@ import NavBar from "@/components/navigation/navbar";
 import { useCartStore } from "@/lib/store/cart-store";
 import { CartSidebar } from "@/components/cart/cart-sidebar";
 import { QueryProvider } from "@/lib/providers/query-provider";
+import { Footer } from "@/components/layout-page/footer";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -73,6 +74,9 @@ export function MainLayout({ children }: MainLayoutProps) {
 
       {/* Page Content */}
       {children}
+
+      {/* Footer */}
+      <Footer />
 
       {/* Cart Sidebar */}
       <CartSidebar />
