@@ -109,3 +109,53 @@ export interface MissionCardProps {
   description: string;
   delay: number;
 }
+
+// ==================== Product Detail Types ====================
+
+export interface ProductVariant {
+  id: string;
+  title: string;
+  availableForSale: boolean;
+  price: {
+    amount: string;
+    currencyCode: string;
+  };
+  selectedOptions: Array<{
+    name: string;
+    value: string;
+  }>;
+}
+
+export interface ProductDetailData {
+  id: string;
+  title: string;
+  description: string;
+  handle: string;
+  priceRange: {
+    minVariantPrice: {
+      amount: string;
+      currencyCode: string;
+    };
+    maxVariantPrice: {
+      amount: string;
+      currencyCode: string;
+    };
+  };
+  images: {
+    edges: Array<{
+      node: {
+        url: string;
+        altText: string | null;
+        width?: number;
+        height?: number;
+      };
+    }>;
+  };
+  variants: {
+    edges: Array<{
+      node: ProductVariant;
+    }>;
+  };
+  availableForSale: boolean;
+}
+

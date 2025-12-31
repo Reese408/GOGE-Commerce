@@ -101,3 +101,53 @@ export const SEARCH_PRODUCTS_QUERY = `
     }
   }
 `;
+
+// Query to fetch a single product by ID with all variants
+export const PRODUCT_BY_ID_QUERY = `
+  query ProductById($id: ID!) {
+    product(id: $id) {
+      id
+      title
+      description
+      handle
+      priceRange {
+        minVariantPrice {
+          amount
+          currencyCode
+        }
+        maxVariantPrice {
+          amount
+          currencyCode
+        }
+      }
+      images(first: 10) {
+        edges {
+          node {
+            url
+            altText
+            width
+            height
+          }
+        }
+      }
+      variants(first: 20) {
+        edges {
+          node {
+            id
+            title
+            availableForSale
+            price {
+              amount
+              currencyCode
+            }
+            selectedOptions {
+              name
+              value
+            }
+          }
+        }
+      }
+      availableForSale
+    }
+  }
+`;

@@ -1,12 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { motion } from "framer-motion";
-import { Eye } from "lucide-react";
 import { AddToCartButton } from "./add-to-cart-button";
-import { ProductModal } from "./product-modal";
-import { Button } from "@/components/ui/button";
 import type { ProductCardData } from "@/lib/types";
 
 interface ProductCardProps {
@@ -15,8 +12,6 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, featured = false }: ProductCardProps) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
   const formattedPrice = new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: product.currencyCode,
@@ -99,12 +94,12 @@ export function ProductCard({ product, featured = false }: ProductCardProps) {
 
   // Grid layout for regular products
   return (
-    <>
-      <motion.div
-        whileHover={{ y: -8 }}
-        transition={{ type: "spring", stiffness: 300, damping: 20 }}
-        className="group bg-white dark:bg-zinc-900 rounded-xl overflow-hidden shadow-md hover:shadow-2xl transition-shadow duration-300 cursor-pointer"
-      >
+    <motion.div
+      whileHover={{ y: -8 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      className="group bg-white dark:bg-zinc-900 rounded-xl overflow-hidden shadow-md hover:shadow-2xl transition-shadow duration-300"
+    >
+      <Link href={`/products/${encodeURIComponent(product.id)}`}>
         {/* Product Image */}
         {product.imageUrl && (
           <div className="relative aspect-square overflow-hidden bg-gray-100 dark:bg-zinc-800">
@@ -115,22 +110,6 @@ export function ProductCard({ product, featured = false }: ProductCardProps) {
               className="object-cover group-hover:scale-110 transition-transform duration-500"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
-
-            {/* Hover Overlay */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              whileHover={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
-              className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center"
-            >
-              <Button
-                onClick={() => setIsModalOpen(true)}
-                className="bg-white/90 hover:bg-white text-gray-900 font-semibold gap-2 transform scale-0 group-hover:scale-100 transition-transform duration-300"
-              >
-                <Eye size={18} />
-                Quick View
-              </Button>
-            </motion.div>
 
             {!product.availableForSale && (
               <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
@@ -155,25 +134,27 @@ export function ProductCard({ product, featured = false }: ProductCardProps) {
               {formattedPrice}
             </span>
           </div>
-
-          <AddToCartButton
-            product={{
-              id: product.id,
-              title: product.title,
-              price: product.price,
-              currencyCode: product.currencyCode,
-              imageUrl: product.imageUrl,
-            }}
-          />
         </div>
-      </motion.div>
+      </Link>
 
-      {/* Product Modal */}
-      <ProductModal
-        product={product}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
-    </>
+      {/* Size Selection at Bottom - Only on Hover */}
+      <div className="border-t border-gray-200 dark:border-zinc-800 px-6 pb-6 pt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 max-h-0 group-hover:max-h-24 overflow-hidden">
+        <p className="text-xs text-gray-600 dark:text-gray-400 mb-2 text-center">
+          Quick Add - Select Size
+        </p>
+        <div className="flex gap-2 justify-center">
+          {["XS", "S", "M", "L", "XL"].map((size) => (
+            <AddToCartButton
+              key={size}
+              product={{
+                ...product,
+                id: `${product.id}-${size}`,
+              }}
+              size={size}
+            />
+          ))}
+        </div>
+      </div>
+    </motion.div>
   );
 }

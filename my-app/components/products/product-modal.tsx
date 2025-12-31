@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { X } from "lucide-react";
@@ -14,10 +15,37 @@ interface ProductModalProps {
 }
 
 export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
+  const [imageLoading, setImageLoading] = useState(true);
+
   const formattedPrice = new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: product.currencyCode,
   }).format(product.price);
+
+  // Handle ESC key press
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("keydown", handleEscape);
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = "hidden";
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen, onClose]);
+
+  // Reset image loading state when product changes
+  useEffect(() => {
+    setImageLoading(true);
+  }, [product.id]);
 
   return (
     <AnimatePresence>
@@ -60,14 +88,23 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
                 {/* Image Section */}
                 <div className="relative h-96 md:h-auto bg-gradient-to-br from-[#F9F4C8] via-[#E8CFA9] to-[#D08F90] dark:from-zinc-800 dark:to-zinc-700 rounded-l-2xl overflow-hidden">
                   {product.imageUrl ? (
-                    <Image
-                      src={product.imageUrl}
-                      alt={product.title}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, 50vw"
-                      priority
-                    />
+                    <>
+                      {/* Loading skeleton */}
+                      {imageLoading && (
+                        <div className="absolute inset-0 bg-gray-200 dark:bg-zinc-800 animate-pulse" />
+                      )}
+                      <Image
+                        src={product.imageUrl}
+                        alt={product.title}
+                        fill
+                        className={`object-cover transition-opacity duration-300 ${
+                          imageLoading ? "opacity-0" : "opacity-100"
+                        }`}
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        onLoad={() => setImageLoading(false)}
+                        priority
+                      />
+                    </>
                   ) : (
                     <div className="flex items-center justify-center h-full text-gray-400">
                       No image available
@@ -75,7 +112,7 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
                   )}
 
                   {/* Availability badge */}
-                  <div className="absolute top-4 left-4">
+                  <div className="absolute top-4 left-4 z-10">
                     {product.availableForSale ? (
                       <span className="px-3 py-1 bg-green-500 text-white text-xs font-semibold rounded-full">
                         In Stock

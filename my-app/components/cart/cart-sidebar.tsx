@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Plus, Minus, Trash2, ShoppingBag } from "lucide-react";
 import Image from "next/image";
@@ -7,10 +9,23 @@ import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/lib/store/cart-store";
 
 export function CartSidebar() {
+  const router = useRouter();
   const { items, isOpen, closeCart, updateQuantity, removeItem, totalPrice } =
     useCartStore();
+  const [loadingImages, setLoadingImages] = useState<Record<string, boolean>>(
+    {}
+  );
 
   const total = totalPrice();
+
+  const handleImageLoad = (itemId: string) => {
+    setLoadingImages((prev) => ({ ...prev, [itemId]: false }));
+  };
+
+  const handleCheckout = () => {
+    closeCart();
+    router.push("/checkout");
+  };
 
   return (
     <AnimatePresence>
@@ -78,11 +93,20 @@ export function CartSidebar() {
                       {/* Product Image */}
                       {item.imageUrl && (
                         <div className="relative w-20 h-20 rounded-md overflow-hidden bg-gray-200 dark:bg-zinc-700 flex-shrink-0">
+                          {/* Loading skeleton */}
+                          {loadingImages[item.id] !== false && (
+                            <div className="absolute inset-0 bg-gray-300 dark:bg-zinc-600 animate-pulse" />
+                          )}
                           <Image
                             src={item.imageUrl}
                             alt={item.title}
                             fill
-                            className="object-cover"
+                            className={`object-cover transition-opacity duration-300 ${
+                              loadingImages[item.id] === false
+                                ? "opacity-100"
+                                : "opacity-0"
+                            }`}
+                            onLoad={() => handleImageLoad(item.id)}
                           />
                         </div>
                       )}
@@ -168,6 +192,7 @@ export function CartSidebar() {
                 {/* Checkout Button */}
                 <Button
                   size="lg"
+                  onClick={handleCheckout}
                   className="w-full bg-[#927194] hover:bg-[#927194]/90 text-white"
                 >
                   Proceed to Checkout

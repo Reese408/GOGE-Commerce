@@ -35,7 +35,7 @@ export default function AboutPage() {
           </h2>
 
           <FounderCard
-            imageSrc="/images/amanda-founder.jpg" // UPDATE with your image path
+            imageSrc="/Amanda-ProfilePic.jpg"
             imageAlt="Amanda Kolar - Founder of Grace, Ongoing"
             name="Amanda Kolar"
             title="Founder & Designer"
