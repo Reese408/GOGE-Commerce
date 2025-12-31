@@ -1,0 +1,57 @@
+"use client";
+
+import Link from "next/link";
+import { ShoppingBag } from "lucide-react";
+import { SearchInput } from "@/components/search/search-input";
+import { ModeToggle } from "@/components/mode-toggle";
+import { Button } from "@/components/ui/button";
+import NavBar from "@/components/navigation/navbar";
+
+export function Header() {
+  return (
+    <header className="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-lg">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 lg:h-20">
+          {/* Logo */}
+          <Link
+            href="/"
+            className="flex items-center gap-2 text-xl lg:text-2xl font-bold bg-linear-to-r from-[#927194] via-[#D08F90] to-[#A0B094] bg-clip-text text-transparent hover:opacity-80 transition-opacity"
+          >
+            Grace, Ongoing
+          </Link>
+
+
+          {/* Search - Desktop */}
+          <div className="hidden lg:block flex-1 max-w-md mx-8">
+            <SearchInput />
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-3">
+            {/* Dark Mode Toggle */}
+            <ModeToggle />
+
+            {/* Cart Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative hover:bg-[#927194]/10 dark:hover:bg-[#D08F90]/10"
+              aria-label="Shopping cart"
+            >
+              <ShoppingBag size={20} />
+              {/* Cart count badge - will be dynamic later with Zustand */}
+              <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#D08F90] text-white text-xs font-bold rounded-full flex items-center justify-center">
+                0
+              </span>
+            </Button>
+          </div>
+        </div>
+
+        {/* Mobile Search */}
+        <div className="lg:hidden pb-4">
+          <SearchInput />
+        </div>
+      </div>
+    </header>
+  );
+}

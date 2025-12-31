@@ -53,15 +53,40 @@ data.products.edges[0].node = {
 #A0B094 - Sage Green
 ```
 
-## File Structure
+## File Structure (Component-Focused)
 ```
-app/page.tsx          → Main product showcase
-components/products/  → Product components
-lib/shopify.ts        → API client
-lib/queries.ts        → GraphQL queries
-next.config.ts        → Image optimization
+app/page.tsx                           → Homepage (Hero + FeaturedProducts)
+components/
+  layout-page/
+    - main-layout.tsx                  → Reusable layout with navbar + cart
+    - hero.tsx                         → Hero section with scroll animations
+  products/
+    - featured-products.tsx            → Server component (fetches products)
+    - product-card.tsx                 → Card (featured/grid layouts)
+    - add-to-cart-button.tsx           → Add to cart with success animation
+  cart/cart-sidebar.tsx                → Animated cart sidebar
+  search/search-input.tsx              → Search w/ Cmd/Ctrl+K
+  navigation/navbar.tsx                → Nav links + mobile menu
+lib/
+  - types.ts                           → ALL TypeScript interfaces
+  - shopify.ts                         → API client
+  - queries.ts                         → GraphQL queries
+  - store/cart-store.ts                → Zustand cart state
+next.config.ts                         → Image optimization
 ```
+## Cart & State Management (Zustand)
+- **Store**: `lib/store/cart-store.ts` - Global cart state with localStorage persistence
+- **Actions**: addItem, removeItem, updateQuantity, clearCart, toggleCart
+- **Features**:
+  - Cart count badge (auto-updates, shows "99+" for >99 items)
+  - Animated cart sidebar (slides in from right)
+  - Persistent cart (survives page refreshes)
+  - Add to cart with success animation
+
+## Components
+- `CartSidebar` - Animated slide-out cart with Framer Motion
+- `AddToCartButton` - Button with success state animation
+- Cart automatically opens when item added
+
 ## Things looking to add
-Zustand for Cart and state management
-Cart
-and some super killer ui for the products along with real world functioanlity for customization of product like which color, size all in one.
+super killer ui for the products along with real world functioanlity for customization of product like which color, size all in one.

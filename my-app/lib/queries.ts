@@ -68,3 +68,36 @@ export const ALL_PRODUCTS_QUERY = `
     }
   }
 `;
+
+// Query to search products by keyword
+export const SEARCH_PRODUCTS_QUERY = `
+  query SearchProducts($query: String!, $first: Int = 10) {
+    products(first: $first, query: $query) {
+      edges {
+        node {
+          id
+          title
+          description
+          handle
+          priceRange {
+            minVariantPrice {
+              amount
+              currencyCode
+            }
+          }
+          images(first: 1) {
+            edges {
+              node {
+                url
+                altText
+                width
+                height
+              }
+            }
+          }
+          availableForSale
+        }
+      }
+    }
+  }
+`;
