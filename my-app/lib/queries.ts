@@ -1,0 +1,70 @@
+// GraphQL query to fetch products from Shopify
+// This uses the Storefront API 2025-01 schema
+export const SINGLE_PRODUCT_QUERY = `
+  query SingleProduct {
+    products(first: 1) {
+      edges {
+        node {
+          id
+          title
+          description
+          handle
+          priceRange {
+            minVariantPrice {
+              amount
+              currencyCode
+            }
+            maxVariantPrice {
+              amount
+              currencyCode
+            }
+          }
+          images(first: 1) {
+            edges {
+              node {
+                url
+                altText
+                width
+                height
+              }
+            }
+          }
+          availableForSale
+        }
+      }
+    }
+  }
+`;
+
+// Query to fetch all products (useful for product listing pages)
+export const ALL_PRODUCTS_QUERY = `
+  query AllProducts($first: Int = 10) {
+    products(first: $first) {
+      edges {
+        node {
+          id
+          title
+          description
+          handle
+          priceRange {
+            minVariantPrice {
+              amount
+              currencyCode
+            }
+          }
+          images(first: 1) {
+            edges {
+              node {
+                url
+                altText
+                width
+                height
+              }
+            }
+          }
+          availableForSale
+        }
+      }
+    }
+  }
+`;
