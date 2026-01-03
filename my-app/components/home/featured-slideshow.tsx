@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useProductsFull } from "@/lib/hooks/use-products-full";
 
 interface Slide {
   id: number;
@@ -18,42 +19,66 @@ interface Slide {
   bgColor: string;
 }
 
-const slides: Slide[] = [
-  {
-    id: 1,
-    title: "Faith-Inspired Apparel",
-    description: "Wear your faith with pride. Premium quality designs that inspire.",
-    image1: "https://cdn.shopify.com/s/files/1/0937/2788/files/tshirt-1.jpg?v=1735702800",
-    image2: "https://cdn.shopify.com/s/files/1/0937/2788/files/tshirt-2.jpg?v=1735702800",
-    ctaText: "Shop Now",
-    ctaLink: "/shop",
-    bgColor: "from-[#927194]/10 to-[#D08F90]/10",
-  },
-  {
-    id: 2,
-    title: "New Collection",
-    description: "Discover our latest faith-based designs for every season.",
-    image1: "https://cdn.shopify.com/s/files/1/0937/2788/files/hoodie-1.jpg?v=1735702800",
-    image2: "https://cdn.shopify.com/s/files/1/0937/2788/files/hoodie-2.jpg?v=1735702800",
-    ctaText: "Explore",
-    ctaLink: "/collections",
-    bgColor: "from-[#A0B094]/10 to-[#927194]/10",
-  }];
-
 export function FeaturedSlideshow() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [direction, setDirection] = useState(0);
 
+  // Fetch products to use for slides
+  const { data: products, isLoading } = useProductsFull(4);
+
+  // Build slides array: first slide with placeholders, rest with actual products
+  const slides = useMemo<Slide[]>(() => {
+    const baseSlides: Slide[] = [
+      {
+        id: 1,
+        title: "Faith-Inspired Apparel",
+        description: "Wear your faith with pride. Premium quality designs that inspire.",
+        image1: "/placeholder-1.jpg", // Replace with your own image
+        image2: "/placeholder-2.jpg", // Replace with your own image
+        ctaText: "Shop Now",
+        ctaLink: "/shop",
+        bgColor: "from-[#927194]/10 to-[#D08F90]/10",
+      },
+    ];
+
+    // Add slides from actual products
+    if (products && products.length > 0) {
+      products.slice(0, 3).forEach((product, index) => {
+        const image1 = product.images.edges[0]?.node.url || "/placeholder-1.jpg";
+        const image2 = product.images.edges[1]?.node.url || product.images.edges[0]?.node.url || "/placeholder-2.jpg";
+
+        const bgColors = [
+          "from-[#A0B094]/10 to-[#927194]/10",
+          "from-[#D08F90]/10 to-[#A0B094]/10",
+          "from-[#927194]/10 to-[#D08F90]/10",
+        ];
+
+        baseSlides.push({
+          id: index + 2,
+          title: product.title,
+          description: product.description || "Discover our latest faith-based designs.",
+          image1,
+          image2,
+          ctaText: "Shop Now",
+          ctaLink: `/products/${product.handle}`,
+          bgColor: bgColors[index % 3],
+        });
+      });
+    }
+
+    return baseSlides;
+  }, [products]);
+
   const nextSlide = useCallback(() => {
     setDirection(1);
     setCurrentSlide((prev) => (prev + 1) % slides.length);
-  }, []);
+  }, [slides.length]);
 
   const prevSlide = useCallback(() => {
     setDirection(-1);
     setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
-  }, []);
+  }, [slides.length]);
 
   const goToSlide = useCallback((index: number) => {
     setDirection(index > currentSlide ? 1 : -1);
@@ -62,11 +87,11 @@ export function FeaturedSlideshow() {
 
   // Auto-advance slides every 5 seconds
   useEffect(() => {
-    if (!isPaused) {
+    if (!isPaused && slides.length > 1) {
       const interval = setInterval(nextSlide, 5000);
       return () => clearInterval(interval);
     }
-  }, [isPaused, nextSlide]);
+  }, [isPaused, nextSlide, slides.length]);
 
   const slideVariants = {
     enter: (direction: number) => ({
@@ -84,6 +109,17 @@ export function FeaturedSlideshow() {
       opacity: 0,
     }),
   };
+
+  // Show loading state if products haven't loaded yet
+  if (isLoading || slides.length === 0) {
+    return (
+      <section className="relative w-full py-16 overflow-hidden">
+        <div className="container mx-auto px-4">
+          <div className="relative h-[500px] rounded-3xl bg-gray-100 dark:bg-zinc-800 animate-pulse" />
+        </div>
+      </section>
+    );
+  }
 
   const slide = slides[currentSlide];
 
@@ -178,50 +214,56 @@ export function FeaturedSlideshow() {
             </AnimatePresence>
 
             {/* Navigation Arrows */}
-            <button
-              onClick={prevSlide}
-              className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/80 dark:bg-zinc-800/80 hover:bg-white dark:hover:bg-zinc-800 transition-all shadow-lg"
-              aria-label="Previous slide"
-            >
-              <ChevronLeft className="text-gray-900 dark:text-white" size={24} />
-            </button>
-            <button
-              onClick={nextSlide}
-              className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/80 dark:bg-zinc-800/80 hover:bg-white dark:hover:bg-zinc-800 transition-all shadow-lg"
-              aria-label="Next slide"
-            >
-              <ChevronRight className="text-gray-900 dark:text-white" size={24} />
-            </button>
+            {slides.length > 1 && (
+              <>
+                <button
+                  onClick={prevSlide}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/80 dark:bg-zinc-800/80 hover:bg-white dark:hover:bg-zinc-800 transition-all shadow-lg"
+                  aria-label="Previous slide"
+                >
+                  <ChevronLeft className="text-gray-900 dark:text-white" size={24} />
+                </button>
+                <button
+                  onClick={nextSlide}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/80 dark:bg-zinc-800/80 hover:bg-white dark:hover:bg-zinc-800 transition-all shadow-lg"
+                  aria-label="Next slide"
+                >
+                  <ChevronRight className="text-gray-900 dark:text-white" size={24} />
+                </button>
 
-            {/* Play/Pause Button */}
-            <button
-              onClick={() => setIsPaused(!isPaused)}
-              className="absolute bottom-6 right-6 z-20 p-3 rounded-full bg-white/80 dark:bg-zinc-800/80 hover:bg-white dark:hover:bg-zinc-800 transition-all shadow-lg"
-              aria-label={isPaused ? "Play slideshow" : "Pause slideshow"}
-            >
-              {isPaused ? (
-                <Play className="text-gray-900 dark:text-white" size={20} />
-              ) : (
-                <Pause className="text-gray-900 dark:text-white" size={20} />
-              )}
-            </button>
+                {/* Play/Pause Button */}
+                <button
+                  onClick={() => setIsPaused(!isPaused)}
+                  className="absolute bottom-6 right-6 z-20 p-3 rounded-full bg-white/80 dark:bg-zinc-800/80 hover:bg-white dark:hover:bg-zinc-800 transition-all shadow-lg"
+                  aria-label={isPaused ? "Play slideshow" : "Pause slideshow"}
+                >
+                  {isPaused ? (
+                    <Play className="text-gray-900 dark:text-white" size={20} />
+                  ) : (
+                    <Pause className="text-gray-900 dark:text-white" size={20} />
+                  )}
+                </button>
+              </>
+            )}
           </div>
 
           {/* Slide Indicators */}
-          <div className="flex justify-center gap-3 mt-6">
-            {slides.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => goToSlide(index)}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  index === currentSlide
-                    ? "w-12 bg-[#927194] dark:bg-[#D08F90]"
-                    : "w-2 bg-gray-300 dark:bg-zinc-700 hover:bg-gray-400 dark:hover:bg-zinc-600"
-                }`}
-                aria-label={`Go to slide ${index + 1}`}
-              />
-            ))}
-          </div>
+          {slides.length > 1 && (
+            <div className="flex justify-center gap-3 mt-6">
+              {slides.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => goToSlide(index)}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    index === currentSlide
+                      ? "w-12 bg-[#927194] dark:bg-[#D08F90]"
+                      : "w-2 bg-gray-300 dark:bg-zinc-700 hover:bg-gray-400 dark:hover:bg-zinc-600"
+                  }`}
+                  aria-label={`Go to slide ${index + 1}`}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </section>
