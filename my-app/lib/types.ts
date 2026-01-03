@@ -38,6 +38,7 @@ export interface ShopifyProduct {
   title: string;
   description: string;
   handle: string;
+  productType?: string;
   priceRange: ShopifyPriceRange;
   images: {
     edges: Array<{
@@ -45,6 +46,17 @@ export interface ShopifyProduct {
     }>;
   };
   availableForSale: boolean;
+}
+
+export interface ShopifyCollection {
+  id: string;
+  title: string;
+  handle: string;
+  description: string;
+  image?: {
+    url: string;
+    altText: string | null;
+  };
 }
 
 export interface ShopifyResponse {

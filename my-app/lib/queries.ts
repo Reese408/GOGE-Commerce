@@ -79,6 +79,7 @@ export const SEARCH_PRODUCTS_QUERY = `
           title
           description
           handle
+          productType
           priceRange {
             minVariantPrice {
               amount
@@ -96,6 +97,26 @@ export const SEARCH_PRODUCTS_QUERY = `
             }
           }
           availableForSale
+        }
+      }
+    }
+  }
+`;
+
+// Query to search collections
+export const SEARCH_COLLECTIONS_QUERY = `
+  query SearchCollections($query: String!, $first: Int = 5) {
+    collections(first: $first, query: $query) {
+      edges {
+        node {
+          id
+          title
+          handle
+          description
+          image {
+            url
+            altText
+          }
         }
       }
     }

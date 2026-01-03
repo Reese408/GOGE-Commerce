@@ -3,12 +3,13 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { ChevronLeft, Check } from "lucide-react";
+import { ChevronLeft, Check, Ruler } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/lib/store/cart-store";
 import { useProductDetail } from "@/lib/hooks/use-product-detail";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { SizingGuide } from "@/components/products/sizing-guide";
 import type { ProductVariant } from "@/lib/types";
 
 interface ProductDetailProps {
@@ -22,6 +23,7 @@ export function ProductDetail({ productId }: ProductDetailProps) {
   const [selectedImage, setSelectedImage] = useState(0);
   const [imageLoading, setImageLoading] = useState(true);
   const [added, setAdded] = useState(false);
+  const [showSizingGuide, setShowSizingGuide] = useState(false);
 
   const { data: product, isLoading, isError, error } = useProductDetail(productId);
 
@@ -193,9 +195,18 @@ export function ProductDetail({ productId }: ProductDetailProps) {
             {/* Size Selector */}
             {sizeOptions.length > 1 && (
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Select Size
-                </h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Select Size
+                  </h3>
+                  <button
+                    onClick={() => setShowSizingGuide(true)}
+                    className="flex items-center gap-2 text-sm text-[#927194] dark:text-[#D08F90] hover:underline transition-colors"
+                  >
+                    <Ruler size={16} />
+                    Size Guide
+                  </button>
+                </div>
                 <div className="grid grid-cols-4 gap-3">
                   {sizeOptions.map((size) => {
                     const variant = variants.find((v) => {
@@ -286,6 +297,9 @@ export function ProductDetail({ productId }: ProductDetailProps) {
           </div>
         </div>
       </div>
+
+      {/* Sizing Guide Modal */}
+      <SizingGuide isOpen={showSizingGuide} onClose={() => setShowSizingGuide(false)} />
     </div>
   );
 }

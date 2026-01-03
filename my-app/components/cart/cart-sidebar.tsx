@@ -7,6 +7,8 @@ import { X, Plus, Minus, Trash2, ShoppingBag } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/lib/store/cart-store";
+import { UndoToast } from "@/components/cart/undo-toast";
+import { RewardsProgressBar } from "@/components/cart/rewards-progress-bar";
 
 export function CartSidebar() {
   const router = useRouter();
@@ -65,22 +67,39 @@ export function CartSidebar() {
             </div>
 
             {/* Cart Items */}
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto">
               {items.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-center">
+                <div className="flex flex-col items-center justify-center h-full text-center px-6">
                   <ShoppingBag
                     size={64}
                     className="text-gray-300 dark:text-zinc-700 mb-4"
                   />
-                  <p className="text-gray-500 dark:text-gray-400 text-lg">
-                    Your cart is empty
-                  </p>
-                  <p className="text-gray-400 dark:text-gray-500 text-sm mt-2">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                    Empty Cart
+                  </h3>
+                  <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
                     Add some products to get started
                   </p>
+                  <Button
+                    size="lg"
+                    onClick={() => {
+                      closeCart();
+                      router.push("/shop");
+                    }}
+                    className="w-full bg-[#927194] hover:bg-[#927194]/90 text-white"
+                  >
+                    Shop Products
+                  </Button>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <>
+                  {/* Rewards Progress Bar */}
+                  <div className="px-6 pt-6 pb-4 border-b border-gray-200 dark:border-zinc-800">
+                    <RewardsProgressBar currentTotal={total} />
+                  </div>
+
+                  {/* Cart Items List */}
+                  <div className="p-6 space-y-4">
                   {items.map((item) => (
                     <motion.div
                       key={item.id}
@@ -165,7 +184,8 @@ export function CartSidebar() {
                       </div>
                     </motion.div>
                   ))}
-                </div>
+                  </div>
+                </>
               )}
             </div>
 
@@ -202,6 +222,9 @@ export function CartSidebar() {
           </motion.div>
         </>
       )}
+
+      {/* Undo Toast - Outside AnimatePresence to persist */}
+      <UndoToast />
     </AnimatePresence>
   );
 }

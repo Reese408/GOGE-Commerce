@@ -8,6 +8,7 @@ export type CartItem = CartItemType;
 interface CartStore {
   items: CartItem[];
   isOpen: boolean;
+  recentlyRemoved: CartItem | null;
 
   // Actions
   addItem: (item: Omit<CartItem, "quantity"> & { quantity?: number }) => void;
@@ -17,6 +18,8 @@ interface CartStore {
   toggleCart: () => void;
   openCart: () => void;
   closeCart: () => void;
+  undoRemove: () => void;
+  clearRecentlyRemoved: () => void;
 
   // Computed values
   totalItems: () => number;
@@ -29,6 +32,7 @@ export const useCartStore = create<CartStore>()(
     (set, get) => ({
       items: [],
       isOpen: false,
+      recentlyRemoved: null,
 
       addItem: (item) => {
         const existingItem = get().items.find((i) => i.id === item.id);
@@ -51,9 +55,27 @@ export const useCartStore = create<CartStore>()(
       },
 
       removeItem: (id) => {
-        set({
-          items: get().items.filter((item) => item.id !== id),
-        });
+        const itemToRemove = get().items.find((item) => item.id === id);
+        if (itemToRemove) {
+          set({
+            items: get().items.filter((item) => item.id !== id),
+            recentlyRemoved: itemToRemove,
+          });
+        }
+      },
+
+      undoRemove: () => {
+        const { recentlyRemoved } = get();
+        if (recentlyRemoved) {
+          set({
+            items: [...get().items, recentlyRemoved],
+            recentlyRemoved: null,
+          });
+        }
+      },
+
+      clearRecentlyRemoved: () => {
+        set({ recentlyRemoved: null });
       },
 
       updateQuantity: (id, quantity) => {

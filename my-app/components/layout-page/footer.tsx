@@ -26,7 +26,7 @@ const footerLinks = {
 };
 
 const socialLinks = [
-  { icon: Instagram, href: "https://instagram.com/graceongoing", label: "Instagram" },
+  { icon: Instagram, href: "https://www.instagram.com/grace.ongoing/", label: "Instagram" },
   { icon: Facebook, href: "https://facebook.com/graceongoing", label: "Facebook" },
   { icon: Twitter, href: "https://x.com/graceongoing", label: "Twitter" },
 ];

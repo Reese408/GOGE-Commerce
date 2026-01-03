@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
-import { SearchInput } from "@/components/search/search-input";
+import { SearchDropdown } from "@/components/search/search-dropdown";
 import { ModeToggle } from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
 import NavBar from "@/components/navigation/navbar";
@@ -38,7 +38,7 @@ export function MainLayout({ children }: MainLayoutProps) {
 
             {/* Search - Desktop */}
             <div className="hidden lg:block flex-1 max-w-md mx-8">
-              <SearchInput />
+              <SearchDropdown />
             </div>
 
             {/* Actions */}
@@ -67,7 +67,7 @@ export function MainLayout({ children }: MainLayoutProps) {
 
           {/* Mobile Search */}
           <div className="lg:hidden pb-4">
-            <SearchInput />
+            <SearchDropdown />
           </div>
         </div>
       </nav>
