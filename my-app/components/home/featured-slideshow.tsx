@@ -23,7 +23,7 @@ const slides: Slide[] = [
     id: 1,
     title: "Faith-Inspired Apparel",
     description: "Wear your faith with pride. Premium quality designs that inspire.",
-    image: "/placeholder-1.jpg",
+    image: "/SlideImage.jpeg",
     imagePosition: "left",
     ctaText: "Shop Now",
     ctaLink: "/shop",
@@ -33,7 +33,7 @@ const slides: Slide[] = [
     id: 2,
     title: "New Collection",
     description: "Discover our latest faith-based designs for every season.",
-    image: "/placeholder-2.jpg",
+    image: "/SlideImage-1.jpeg",
     imagePosition: "right",
     ctaText: "Explore",
     ctaLink: "/shop",
@@ -142,7 +142,7 @@ export function FeaturedSlideshow() {
                       src={slide.image}
                       alt={slide.title}
                       fill
-                      className="object-cover"
+                      className="object-contain"
                       sizes="50vw"
                       priority
                     />
@@ -207,47 +207,50 @@ export function FeaturedSlideshow() {
             <div className="absolute bottom-6 right-6 z-20">
               <div className="relative w-[52px] h-[52px]">
                 {/* SVG Progress Ring */}
-                <svg className="absolute inset-0 -rotate-90" width="52" height="52" style={{ opacity: 1 }}>
-                  {/* Background circle */}
-                  <circle
-                    cx="26"
-                    cy="26"
-                    r="22"
-                    stroke="#d1d5db"
-                    strokeWidth="4"
-                    fill="none"
-                    opacity="1"
-                  />
-                  {/* Progress circle - Light mode */}
-                  <circle
-                    cx="26"
-                    cy="26"
-                    r="22"
-                    stroke="#2563eb"
-                    strokeWidth="4"
-                    fill="none"
-                    strokeDasharray={circumference}
-                    strokeDashoffset={strokeDashoffset}
-                    className="transition-all duration-100 ease-linear dark:hidden"
-                    strokeLinecap="round"
-                    opacity="1"
-                  />
-                  {/* Progress circle - Dark mode */}
-                  <circle
-                    cx="26"
-                    cy="26"
-                    r="22"
-                    stroke="#D08F90"
-                    strokeWidth="4"
-                    fill="none"
-                    strokeDasharray={circumference}
-                    strokeDashoffset={strokeDashoffset}
-                    className="hidden dark:block transition-all duration-100 ease-linear"
-                    strokeLinecap="round"
-                    opacity="1"
-                  />
-                </svg>
+              <svg
+                className="absolute inset-0 -rotate-90 pointer-events-none"
+                width="52"
+                height="52"
+              >
+                {/* Background */}
+                <circle
+                  cx="26"
+                  cy="26"
+                  r="22"
+                  stroke="#d1d5db"
+                  strokeWidth="5"
+                  fill="none"
+                  opacity="0.2"
+                />
 
+                {/* Progress - Light mode (BLACK) */}
+                <circle
+                  cx="26"
+                  cy="26"
+                  r="22"
+                  stroke="#000000"
+                  strokeWidth="5"
+                  fill="none"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={strokeDashoffset}
+                  strokeLinecap="round"
+                  className="transition-all duration-100 ease-linear dark:hidden"
+                />
+
+                {/* Progress - Dark mode (WHITE) */}
+                <circle
+                  cx="26"
+                  cy="26"
+                  r="22"
+                  stroke="#ffffff"
+                  strokeWidth="5"
+                  fill="none"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={strokeDashoffset}
+                  strokeLinecap="round"
+                  className="hidden dark:block transition-all duration-100 ease-linear"
+                />
+              </svg>
                 {/* Button */}
                 <button
                   onClick={() => setIsPaused(!isPaused)}
