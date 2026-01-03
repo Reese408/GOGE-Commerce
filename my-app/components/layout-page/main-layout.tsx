@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { ShoppingBag } from "lucide-react";
 import { SearchDropdown } from "@/components/search/search-dropdown";
 import { ModeToggle } from "@/components/mode-toggle";
@@ -10,6 +11,7 @@ import { useCartStore } from "@/lib/store/cart-store";
 import { CartSidebar } from "@/components/cart/cart-sidebar";
 import { QueryProvider } from "@/lib/providers/query-provider";
 import { Footer } from "@/components/layout-page/footer";
+import { useState } from "react";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -18,6 +20,8 @@ interface MainLayoutProps {
 export function MainLayout({ children }: MainLayoutProps) {
   const { totalItems, toggleCart } = useCartStore();
   const itemCount = totalItems();
+  const [logoError, setLogoError] = useState(false);
+
 
   return (
     <QueryProvider>
@@ -26,12 +30,27 @@ export function MainLayout({ children }: MainLayoutProps) {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 lg:h-20">
             {/* Logo */}
-            <Link
-              href="/"
-              className="flex items-center gap-2 text-xl lg:text-2xl font-bold bg-linear-to-r from-[#927194] via-[#D08F90] to-[#A0B094] bg-clip-text text-transparent hover:opacity-80 transition-opacity"
-            >
-              Grace Ongoing
-            </Link>
+           <Link
+            href="/"
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          >
+            {!logoError ? (
+              <Image
+                src="/Logo1.jpeg"
+                alt="Grace Ongoing"
+                width={360}
+                height={120}
+                priority
+                onError={() => setLogoError(true)}
+                className="h-14 lg:h-19 w-auto object-contain"
+              />
+            ) : (
+              <span className="text-xl lg:text-2xl font-bold bg-linear-to-r from-[#927194] via-[#D08F90] to-[#A0B094] bg-clip-text text-transparent">
+                Grace Ongoing
+              </span>
+            )}
+          </Link>
+
 
             {/* Navigation Links */}
             <NavBar />
