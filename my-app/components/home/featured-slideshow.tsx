@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -111,102 +111,96 @@ export function FeaturedSlideshow() {
   const strokeDashoffset = circumference - (progress / 100) * circumference;
 
   return (
-    <section className="relative w-full py-16 overflow-hidden">
-      <div className="container mx-auto px-4">
-        <div className="relative">
-          {/* Slideshow Container */}
-          <div className="relative h-[500px] rounded-3xl overflow-hidden shadow-2xl">
-            <AnimatePresence initial={false} custom={direction}>
-              <motion.div
-                key={currentSlide}
-                custom={direction}
-                variants={slideVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{
-                  x: { type: "spring", stiffness: 300, damping: 30 },
-                  opacity: { duration: 0.2 },
-                }}
-                className={`absolute inset-0 bg-gradient-to-r ${slide.bgColor} dark:from-zinc-800 dark:to-zinc-900`}
-              >
-                <div className={`h-full flex ${slide.imagePosition === "right" ? "flex-row-reverse" : "flex-row"}`}>
-                  {/* Image Side - Takes up half */}
-                  <motion.div
-                    initial={{ opacity: 0, scale: 1.1 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.6 }}
-                    className="relative w-1/2 h-full"
+    <section className="relative w-full overflow-hidden">
+      <div className="relative w-full">
+        {/* Slideshow Container - Full Width */}
+        <div className="relative w-full h-[700px] overflow-hidden">
+          <AnimatePresence initial={false} custom={direction}>
+            <motion.div
+              key={currentSlide}
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{
+                x: { type: "spring", stiffness: 300, damping: 30 },
+                opacity: { duration: 0.2 },
+              }}
+              className="absolute inset-0"
+            >
+              {/* Full Width Image Background */}
+              <div className="absolute inset-0">
+                <Image
+                  src={slide.image}
+                  alt={slide.title}
+                  fill
+                  className="object-cover"
+                  sizes="100vw"
+                  priority
+                />
+                {/* Overlay for better text readability */}
+                <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-black/60" />
+              </div>
+
+              {/* Text Content Overlay */}
+              <div className={`relative h-full flex items-center ${slide.imagePosition === "left" ? "justify-end" : "justify-start"}`}>
+                <div className="max-w-2xl px-8 md:px-16 lg:px-24">
+                  <motion.h2
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-4xl md:text-5xl lg:text-7xl font-bold text-white mb-6 drop-shadow-lg"
                   >
-                    <Image
-                      src={slide.image}
-                      alt={slide.title}
-                      fill
-                      className="object-contain"
-                      sizes="50vw"
-                      priority
-                    />
+                    {slide.title}
+                  </motion.h2>
+                  <motion.p
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="text-xl md:text-2xl text-white/90 mb-8 drop-shadow-md"
+                  >
+                    {slide.description}
+                  </motion.p>
+                  <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                  >
+                    <Link href={slide.ctaLink}>
+                      <Button
+                        size="lg"
+                        className="bg-white hover:bg-white/90 text-gray-900 px-10 py-7 text-xl rounded-full font-semibold shadow-2xl"
+                      >
+                        {slide.ctaText}
+                      </Button>
+                    </Link>
                   </motion.div>
-
-                  {/* Text Side - Takes up half */}
-                  <div className="w-1/2 flex items-center justify-center px-12 md:px-20">
-                    <div className="max-w-xl">
-                      <motion.h2
-                        initial={{ y: 20, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ delay: 0.2 }}
-                        className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 dark:text-white mb-4"
-                      >
-                        {slide.title}
-                      </motion.h2>
-                      <motion.p
-                        initial={{ y: 20, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ delay: 0.3 }}
-                        className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-8"
-                      >
-                        {slide.description}
-                      </motion.p>
-                      <motion.div
-                        initial={{ y: 20, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ delay: 0.4 }}
-                      >
-                        <Link href={slide.ctaLink}>
-                          <Button
-                            size="lg"
-                            className="bg-[#927194] hover:bg-[#927194]/90 text-white px-8 py-6 text-lg rounded-full"
-                          >
-                            {slide.ctaText}
-                          </Button>
-                        </Link>
-                      </motion.div>
-                    </div>
-                  </div>
                 </div>
-              </motion.div>
-            </AnimatePresence>
+              </div>
+            </motion.div>
+          </AnimatePresence>
 
-            {/* Navigation Arrows */}
-            <button
-              onClick={prevSlide}
-              className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/90 dark:bg-zinc-800/80 hover:bg-white dark:hover:bg-zinc-800 transition-all shadow-lg"
-              aria-label="Previous slide"
-            >
-              <ChevronLeft className="text-gray-800 dark:text-white" size={24} />
-            </button>
-            <button
-              onClick={nextSlide}
-              className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/90 dark:bg-zinc-800/80 hover:bg-white dark:hover:bg-zinc-800 transition-all shadow-lg"
-              aria-label="Next slide"
-            >
-              <ChevronRight className="text-gray-800 dark:text-white" size={24} />
-            </button>
+          {/* Navigation Arrows */}
+          <button
+            onClick={prevSlide}
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/90 dark:bg-zinc-800/80 hover:bg-white dark:hover:bg-zinc-800 transition-all shadow-lg"
+            aria-label="Previous slide"
+          >
+            <ChevronLeft className="text-white" size={24} />
+          </button>
+          <button
+            onClick={nextSlide}
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/90 dark:bg-zinc-800/80 hover:bg-white dark:hover:bg-zinc-800 transition-all shadow-lg"
+            aria-label="Next slide"
+          >
+            <ChevronRight className="text-white" size={24} />
+          </button>
 
-            {/* Play/Pause Button with Progress Ring */}
-            <div className="absolute bottom-6 right-6 z-20">
-              <div className="relative w-[52px] h-[52px]">
-                {/* SVG Progress Ring */}
+          {/* Play/Pause Button with Progress Ring */}
+          <div className="absolute bottom-6 right-6 z-20">
+            <div className="relative w-[52px] h-[52px]">
+              {/* SVG Progress Ring */}
               <svg
                 className="absolute inset-0 -rotate-90 pointer-events-none"
                 width="52"
@@ -217,27 +211,13 @@ export function FeaturedSlideshow() {
                   cx="26"
                   cy="26"
                   r="22"
-                  stroke="#d1d5db"
+                  stroke="#ffffff"
                   strokeWidth="5"
                   fill="none"
-                  opacity="0.2"
+                  opacity="0.3"
                 />
 
-                {/* Progress - Light mode (BLACK) */}
-                <circle
-                  cx="26"
-                  cy="26"
-                  r="22"
-                  stroke="#000000"
-                  strokeWidth="5"
-                  fill="none"
-                  strokeDasharray={circumference}
-                  strokeDashoffset={strokeDashoffset}
-                  strokeLinecap="round"
-                  className="transition-all duration-100 ease-linear dark:hidden"
-                />
-
-                {/* Progress - Dark mode (WHITE) */}
+                {/* Progress - Always White */}
                 <circle
                   cx="26"
                   cy="26"
@@ -248,40 +228,39 @@ export function FeaturedSlideshow() {
                   strokeDasharray={circumference}
                   strokeDashoffset={strokeDashoffset}
                   strokeLinecap="round"
-                  className="hidden dark:block transition-all duration-100 ease-linear"
+                  className="transition-all duration-100 ease-linear"
                 />
               </svg>
-                {/* Button */}
-                <button
-                  onClick={() => setIsPaused(!isPaused)}
-                  className="absolute inset-0 flex items-center justify-center rounded-full bg-white/90 dark:bg-zinc-800/80 hover:bg-white dark:hover:bg-zinc-800 transition-all shadow-lg"
-                  aria-label={isPaused ? "Play slideshow" : "Pause slideshow"}
-                >
-                  {isPaused ? (
-                    <Play className="text-gray-800 dark:text-white" size={20} />
-                  ) : (
-                    <Pause className="text-gray-800 dark:text-white" size={20} />
-                  )}
-                </button>
-              </div>
+              {/* Button */}
+              <button
+                onClick={() => setIsPaused(!isPaused)}
+                className="absolute inset-0 flex items-center justify-center rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all shadow-lg border border-white/30"
+                aria-label={isPaused ? "Play slideshow" : "Pause slideshow"}
+              >
+                {isPaused ? (
+                  <Play className="text-white" size={20} />
+                ) : (
+                  <Pause className="text-white" size={20} />
+                )}
+              </button>
             </div>
           </div>
+        </div>
 
-          {/* Slide Indicators */}
-          <div className="flex justify-center gap-3 mt-6">
-            {slides.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => goToSlide(index)}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  index === currentSlide
-                    ? "w-12 bg-[#927194] dark:bg-[#D08F90]"
-                    : "w-2 bg-gray-300 dark:bg-zinc-700 hover:bg-gray-400 dark:hover:bg-zinc-600"
-                }`}
-                aria-label={`Go to slide ${index + 1}`}
-              />
-            ))}
-          </div>
+        {/* Slide Indicators */}
+        <div className="flex justify-center gap-3 mt-6 pb-6">
+          {slides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => goToSlide(index)}
+              className={`h-2 rounded-full transition-all duration-300 ${
+                index === currentSlide
+                  ? "w-12 bg-[#927194] dark:bg-[#D08F90]"
+                  : "w-2 bg-gray-300 dark:bg-zinc-700 hover:bg-gray-400 dark:hover:bg-zinc-600"
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
         </div>
       </div>
     </section>

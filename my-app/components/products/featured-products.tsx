@@ -43,12 +43,14 @@ export function FeaturedProducts() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-zinc-950">
-      <main className="container mx-auto max-w-6xl py-16 px-6 sm:px-8">
-        <h2 className="text-3xl font-bold text-center mb-12 text-gray-900 dark:text-white">
-          Featured Products
-        </h2>
+      <main className="w-full py-16">
+        <div className="container mx-auto px-4 mb-12">
+          <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white">
+            Featured Products
+          </h2>
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-1">
           {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

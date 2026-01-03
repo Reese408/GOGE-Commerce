@@ -16,7 +16,7 @@ export function Hero() {
   return (
     <motion.section
       style={{ opacity, scale }}
-      className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#F9F4C8] via-[#E8CFA9] to-[#D08F90] dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-800"
+      className="relative min-h-[100vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#F9F4C8] via-[#E8CFA9] to-[#D08F90] dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-800"
     >
       {/* Animated background gradient orbs */}
       <div className="absolute inset-0 overflow-hidden">
