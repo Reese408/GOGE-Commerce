@@ -62,6 +62,13 @@ export const ALL_PRODUCTS_QUERY = `
               }
             }
           }
+          variants(first: 1) {
+            edges {
+              node {
+                id
+              }
+            }
+          }
           availableForSale
         }
       }
@@ -93,6 +100,13 @@ export const SEARCH_PRODUCTS_QUERY = `
                 altText
                 width
                 height
+              }
+            }
+          }
+          variants(first: 1) {
+            edges {
+              node {
+                id
               }
             }
           }

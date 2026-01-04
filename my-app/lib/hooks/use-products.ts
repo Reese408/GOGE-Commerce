@@ -14,9 +14,11 @@ async function fetchProducts(count: number = 10): Promise<ProductCardData[]> {
   return data.data.products.edges.map(({ node: product }) => {
     const image = product.images.edges[0]?.node;
     const price = parseFloat(product.priceRange.minVariantPrice.amount);
+    // Get the first variant ID (default variant) for checkout
+    const variantId = product.variants?.edges[0]?.node?.id || product.id;
 
     return {
-      id: product.id,
+      id: variantId, // Use variant ID instead of product ID for Shopify checkout
       title: product.title,
       description: product.description,
       price: price,

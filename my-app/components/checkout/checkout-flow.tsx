@@ -63,7 +63,7 @@ const SHIPPING_METHODS: ShippingMethod[] = [
 
 export function CheckoutFlow() {
   const router = useRouter();
-  const { items, totalPrice, clearCart } = useCartStore();
+  const { items, totalPrice } = useCartStore();
   const [step, setStep] = useState<"shipping" | "payment" | "review">(
     "shipping"
   );
@@ -101,7 +101,7 @@ export function CheckoutFlow() {
     });
   };
 
-  const handleContinueToPayment = () => {
+  const handleContinueToPayment = async () => {
     // Validate shipping form
     if (
       !shippingData.email ||
@@ -115,30 +115,87 @@ export function CheckoutFlow() {
       alert("Please fill in all required fields");
       return;
     }
-    setStep("payment");
+
+    setIsProcessing(true);
+
+    try {
+      // Create Shopify checkout with items and shipping info
+      const shopifyDomain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
+
+      // Build cart items for URL
+      const cartItems = items
+        .map((item) => {
+          // Extract numeric ID from Shopify GID and remove any size suffix
+          // GID format: gid://shopify/ProductVariant/123456789
+          // productId might have size suffix like: 123456789-L
+          const productIdPart = item.productId.split("/").pop() || item.productId;
+          const numericId = productIdPart.split("-")[0]; // Remove size suffix
+          return `${numericId}:${item.quantity}`;
+        })
+        .join(",");
+
+      // Create checkout URL with pre-filled customer info
+      // Shopify will use URL parameters to pre-fill the checkout form
+      const checkoutUrl = new URL(`https://${shopifyDomain}/cart/${cartItems}`);
+
+      // Add customer info as query parameters (Shopify will pre-fill these)
+      checkoutUrl.searchParams.set("checkout[email]", shippingData.email);
+      checkoutUrl.searchParams.set("checkout[shipping_address][first_name]", shippingData.firstName);
+      checkoutUrl.searchParams.set("checkout[shipping_address][last_name]", shippingData.lastName);
+      checkoutUrl.searchParams.set("checkout[shipping_address][address1]", shippingData.address);
+      if (shippingData.apartment) {
+        checkoutUrl.searchParams.set("checkout[shipping_address][address2]", shippingData.apartment);
+      }
+      checkoutUrl.searchParams.set("checkout[shipping_address][city]", shippingData.city);
+      checkoutUrl.searchParams.set("checkout[shipping_address][province]", shippingData.state);
+      checkoutUrl.searchParams.set("checkout[shipping_address][zip]", shippingData.zipCode);
+      checkoutUrl.searchParams.set("checkout[shipping_address][country]", shippingData.country);
+      if (shippingData.phone) {
+        checkoutUrl.searchParams.set("checkout[shipping_address][phone]", shippingData.phone);
+      }
+
+      console.log("Redirecting to Shopify checkout with pre-filled info:", checkoutUrl.toString());
+
+      // Redirect to Shopify checkout
+      window.location.href = checkoutUrl.toString();
+    } catch (error) {
+      console.error("Checkout error:", error);
+      alert("There was an error creating your checkout. Please try again.");
+      setIsProcessing(false);
+    }
   };
 
   const handlePlaceOrder = async () => {
     setIsProcessing(true);
 
-    // Simulate Shopify checkout process
     try {
-      // In a real implementation, this would:
-      // 1. Create a Shopify checkout
-      // 2. Add line items
-      // 3. Set shipping address
-      // 4. Process payment
-      // 5. Complete the order
+      // Build cart URL for Shopify checkout
+      const shopifyDomain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
 
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Create cart items string for Shopify
+      // Format: variant_id:quantity,variant_id:quantity
+      const cartItems = items
+        .map((item) => {
+          // Extract numeric ID from Shopify GID and remove any size suffix
+          // GID format: gid://shopify/ProductVariant/123456789
+          // productId might have size suffix like: 123456789-L
+          const productIdPart = item.productId.split("/").pop() || item.productId;
+          const numericId = productIdPart.split("-")[0]; // Remove size suffix
+          return `${numericId}:${item.quantity}`;
+        })
+        .join(",");
 
-      // Clear cart and redirect to success page
-      clearCart();
-      router.push("/checkout/success");
+      // Shopify cart URL format
+      const checkoutUrl = `https://${shopifyDomain}/cart/${cartItems}`;
+
+      console.log("Redirecting to Shopify checkout:", checkoutUrl);
+      console.log("Cart items:", items);
+
+      // Redirect to Shopify checkout
+      window.location.href = checkoutUrl;
     } catch (error) {
       console.error("Checkout error:", error);
       alert("There was an error processing your order. Please try again.");
-    } finally {
       setIsProcessing(false);
     }
   };

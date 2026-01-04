@@ -45,6 +45,13 @@ export interface ShopifyProduct {
       node: ShopifyImage;
     }>;
   };
+  variants?: {
+    edges: Array<{
+      node: {
+        id: string;
+      };
+    }>;
+  };
   availableForSale: boolean;
 }
 

@@ -123,7 +123,7 @@ export function ProductCard({ product, featured = false }: ProductCardProps) {
                 Quick Add
               </p>
               <div className="flex gap-1 justify-center">
-                {["XS", "S", "M", "L", "XL"].map((size) => (
+                {["XS", "S", "M", "L", "XL", "2XL"].map((size) => (
                   <AddToCartButton
                     key={size}
                     product={{

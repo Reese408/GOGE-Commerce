@@ -18,10 +18,10 @@ const footerLinks = {
     { label: "Mission & Values", href: "/about#mission" },
   ],
   support: [
-    { label: "Contact Us", href: "/contact" },
-    { label: "Shipping Info", href: "/shipping" },
-    { label: "Returns", href: "/returns" },
-    { label: "FAQ", href: "/faq" },
+    { label: "Track Order", href: "/track-order" },
+    { label: "Returns & Exchanges", href: "/returns" },
+    { label: "Return Policy", href: "/return-policy" },
+    { label: "Contact Us", href: "mailto:support@graceongoing.com" },
   ],
 };
 

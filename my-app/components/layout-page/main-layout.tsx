@@ -36,7 +36,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           >
             {!logoError ? (
               <Image
-                src="/Logo1.jpeg"
+                src="/Logo1-removebg-preview.png"
                 alt="Grace Ongoing"
                 width={360}
                 height={120}
