@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { CheckCircle, XCircle, Package, RefreshCw } from "lucide-react";
+import { AlertCircle, Package, Mail } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -17,173 +17,131 @@ export default function ReturnPolicyPage() {
         </div>
 
         <div className="prose prose-gray dark:prose-invert max-w-none space-y-8">
-          {/* Overview */}
-          <div className="bg-gradient-to-r from-[#927194]/10 to-[#D08F90]/10 rounded-xl p-6 border border-[#927194]/20">
-            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white flex items-center gap-2">
-              <Package size={24} />
-              Our Commitment
-            </h2>
-            <p className="text-gray-700 dark:text-gray-300">
-              At Grace, Ongoing, we want you to be completely satisfied with your purchase. If you're not happy with your order for any reason, we're here to help with our hassle-free return policy.
-            </p>
-          </div>
-
-          {/* Return Window */}
-          <div>
-            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
-              30-Day Return Window
-            </h2>
-            <p className="text-gray-700 dark:text-gray-300">
-              You have <strong>30 days</strong> from the date of delivery to initiate a return. Returns requested after this period cannot be accepted.
-            </p>
-          </div>
-
-          {/* Eligible Items */}
-          <div>
-            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white flex items-center gap-2">
-              <CheckCircle className="text-green-500" size={24} />
-              Eligible for Return
-            </h2>
-            <ul className="list-disc list-inside space-y-2 text-gray-700 dark:text-gray-300">
-              <li>Unworn and unwashed items</li>
-              <li>Items with original tags still attached</li>
-              <li>Items in original packaging (if applicable)</li>
-              <li>Items without any signs of wear, damage, or alteration</li>
-              <li>Defective or damaged items received</li>
-            </ul>
-          </div>
-
-          {/* Non-Returnable Items */}
-          <div>
-            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white flex items-center gap-2">
-              <XCircle className="text-red-500" size={24} />
-              Non-Returnable Items
-            </h2>
-            <ul className="list-disc list-inside space-y-2 text-gray-700 dark:text-gray-300">
-              <li>Items marked as "Final Sale"</li>
-              <li>Worn, washed, or altered items</li>
-              <li>Items without original tags</li>
-              <li>Customized or personalized items</li>
-              <li>Items damaged due to misuse</li>
-            </ul>
-          </div>
-
-          {/* How to Return */}
-          <div>
-            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white flex items-center gap-2">
-              <RefreshCw size={24} />
-              How to Return an Item
-            </h2>
-            <ol className="list-decimal list-inside space-y-3 text-gray-700 dark:text-gray-300">
-              <li className="font-semibold">
-                Initiate Your Return
-                <p className="ml-6 mt-1 font-normal">
-                  Visit our <Link href="/returns" className="text-[#927194] hover:underline">Returns & Exchanges</Link> page and fill out the return request form, or email us at <a href="mailto:support@graceongoing.com" className="text-[#927194] hover:underline">support@graceongoing.com</a> with your order number.
+          {/* All Sales Final */}
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 rounded-xl p-8 border-2 border-amber-200 dark:border-amber-900">
+            <div className="flex items-start gap-4">
+              <AlertCircle className="text-amber-600 dark:text-amber-500 mt-1 flex-shrink-0" size={32} />
+              <div>
+                <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
+                  All Sales Are Final
+                </h2>
+                <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed">
+                  As a small, family-operated business with a dedicated team, we are unable to offer returns or exchanges on purchased items. We appreciate your understanding and support as we work hard to bring you quality products with faith and care.
                 </p>
-              </li>
-              <li className="font-semibold">
-                Receive Your Return Label
-                <p className="ml-6 mt-1 font-normal">
-                  Within 24-48 hours, we'll email you a prepaid return shipping label.
-                </p>
-              </li>
-              <li className="font-semibold">
-                Pack Your Items
-                <p className="ml-6 mt-1 font-normal">
-                  Securely pack the item(s) in the original packaging or a suitable box. Include all tags and accessories.
-                </p>
-              </li>
-              <li className="font-semibold">
-                Ship Your Return
-                <p className="ml-6 mt-1 font-normal">
-                  Attach the prepaid label and drop off at your nearest shipping location.
-                </p>
-              </li>
-            </ol>
-          </div>
-
-          {/* Refund Process */}
-          <div>
-            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
-              Refund Process
-            </h2>
-            <div className="space-y-4 text-gray-700 dark:text-gray-300">
-              <p>
-                <strong>Processing Time:</strong> Once we receive your return, we'll inspect it and process your refund within <strong>5-7 business days</strong>.
-              </p>
-              <p>
-                <strong>Refund Method:</strong> Refunds will be issued to your original payment method. Depending on your bank or credit card company, it may take an additional 3-5 business days for the refund to appear in your account.
-              </p>
-              <p>
-                <strong>Notification:</strong> You'll receive an email confirmation once your refund has been processed.
-              </p>
+              </div>
             </div>
           </div>
 
-          {/* Exchanges */}
-          <div>
-            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
-              Exchanges
+          {/* Why No Returns */}
+          <div className="bg-white dark:bg-zinc-900 rounded-xl p-8 border border-gray-200 dark:border-zinc-800">
+            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white flex items-center gap-2">
+              <Package size={24} className="text-[#927194]" />
+              Our Small Business Commitment
             </h2>
+            <p className="text-gray-700 dark:text-gray-300 mb-4">
+              Grace, Ongoing is a small business with a limited staff. We carefully prepare and fulfill each order with love and attention to detail. Due to our size and resources, we cannot accommodate returns or exchanges at this time.
+            </p>
             <p className="text-gray-700 dark:text-gray-300">
-              We currently don't offer direct exchanges. If you'd like a different size or item, please return your original purchase for a refund and place a new order. This ensures you get exactly what you want without delay.
+              We encourage you to review product descriptions, sizing information, and images carefully before completing your purchase. If you have any questions about a product, please contact us before ordering.
             </p>
           </div>
 
           {/* Damaged or Defective Items */}
-          <div className="bg-red-50 dark:bg-red-950/20 rounded-xl p-6 border border-red-200 dark:border-red-900">
+          <div className="bg-red-50 dark:bg-red-950/20 rounded-xl p-8 border-2 border-red-200 dark:border-red-900">
             <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
-              Damaged or Defective Items
-            </h2>
-            <p className="text-gray-700 dark:text-gray-300">
-              If you receive a damaged or defective item, please contact us immediately at <a href="mailto:support@graceongoing.com" className="text-[#927194] hover:underline">support@graceongoing.com</a> with:
-            </p>
-            <ul className="list-disc list-inside mt-3 space-y-2 text-gray-700 dark:text-gray-300">
-              <li>Your order number</li>
-              <li>Photos of the damaged/defective item</li>
-              <li>Description of the issue</li>
-            </ul>
-            <p className="mt-3 text-gray-700 dark:text-gray-300">
-              We'll arrange for a replacement or full refund, including return shipping costs.
-            </p>
-          </div>
-
-          {/* Free Returns */}
-          <div>
-            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
-              Free Returns
-            </h2>
-            <p className="text-gray-700 dark:text-gray-300">
-              All returns are free! We provide a prepaid return shipping label for all eligible returns within the United States. You won't be charged for return shipping.
-            </p>
-          </div>
-
-          {/* Questions */}
-          <div className="bg-gradient-to-r from-[#927194]/10 to-[#D08F90]/10 rounded-xl p-6 border border-[#927194]/20">
-            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
-              Have Questions?
+              Damaged or Defective Items Only
             </h2>
             <p className="text-gray-700 dark:text-gray-300 mb-4">
-              Our customer service team is here to help! Reach out to us:
+              While we cannot accept returns for change of mind, we absolutely stand behind the quality of our products. If you receive a damaged or defective item, please contact us immediately.
             </p>
-            <div className="space-y-2 text-gray-700 dark:text-gray-300">
-              <p>
-                📧 Email: <a href="mailto:support@graceongoing.com" className="text-[#927194] hover:underline">support@graceongoing.com</a>
+            <p className="text-gray-700 dark:text-gray-300 mb-4">
+              <strong className="text-gray-900 dark:text-white">To report a damaged or defective item, email us at:</strong>
+            </p>
+            <div className="bg-white/60 dark:bg-zinc-900/60 rounded-lg p-4 mb-4">
+              <a href="mailto:support@graceongoing.com" className="text-lg font-semibold text-[#927194] hover:underline">
+                support@graceongoing.com
+              </a>
+            </div>
+            <p className="text-gray-700 dark:text-gray-300 mb-3">
+              <strong className="text-gray-900 dark:text-white">Please include:</strong>
+            </p>
+            <ul className="list-disc list-inside space-y-2 text-gray-700 dark:text-gray-300 mb-4">
+              <li>Your order number</li>
+              <li>Clear photos of the damaged or defective item</li>
+              <li>Detailed description of the issue</li>
+              <li>Date you received the order</li>
+            </ul>
+            <p className="text-gray-700 dark:text-gray-300">
+              We will review your case and, if approved, provide a replacement or full refund for items that arrive damaged or defective. Please report any issues within <strong>7 days</strong> of receiving your order.
+            </p>
+          </div>
+
+          {/* Before You Buy */}
+          <div className="bg-gradient-to-r from-[#927194]/10 to-[#D08F90]/10 rounded-xl p-8 border border-[#927194]/20">
+            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
+              Before You Purchase
+            </h2>
+            <div className="space-y-3 text-gray-700 dark:text-gray-300">
+              <p className="flex items-start gap-2">
+                <span className="text-[#927194] font-bold mt-1">✓</span>
+                <span>Review product descriptions and sizing charts carefully</span>
               </p>
-              <p>
-                📞 Phone: <a href="tel:1-800-GRACE-GO" className="text-[#927194] hover:underline">1-800-GRACE-GO</a>
+              <p className="flex items-start gap-2">
+                <span className="text-[#927194] font-bold mt-1">✓</span>
+                <span>Check product images and details</span>
               </p>
-              <p>
-                💬 Live Chat: Mon-Fri, 9am-5pm EST
+              <p className="flex items-start gap-2">
+                <span className="text-[#927194] font-bold mt-1">✓</span>
+                <span>Contact us with any questions before ordering</span>
+              </p>
+              <p className="flex items-start gap-2">
+                <span className="text-[#927194] font-bold mt-1">✓</span>
+                <span>Ensure your shipping address is correct</span>
               </p>
             </div>
           </div>
 
+          {/* Contact Us */}
+          <div className="bg-white dark:bg-zinc-900 rounded-xl p-8 border border-gray-200 dark:border-zinc-800">
+            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white flex items-center gap-2">
+              <Mail size={24} className="text-[#927194]" />
+              Have Questions?
+            </h2>
+            <p className="text-gray-700 dark:text-gray-300 mb-4">
+              If you have any questions about our products before purchasing, we're here to help!
+            </p>
+            <div className="space-y-3 text-gray-700 dark:text-gray-300">
+              <p>
+                📧 <strong>Email:</strong>{" "}
+                <a href="mailto:support@graceongoing.com" className="text-[#927194] hover:underline">
+                  support@graceongoing.com
+                </a>
+              </p>
+              <p>
+                📞 <strong>Phone:</strong>{" "}
+                <a href="tel:1-800-GRACE-GO" className="text-[#927194] hover:underline">
+                  1-800-GRACE-GO
+                </a>
+              </p>
+              <p>💬 <strong>Live Chat:</strong> Mon-Fri, 9am-5pm EST</p>
+            </div>
+          </div>
+
+          {/* Thank You */}
+          <div className="text-center bg-gradient-to-r from-[#927194]/5 to-[#D08F90]/5 rounded-xl p-8">
+            <p className="text-lg text-gray-700 dark:text-gray-300 italic">
+              "Thank you for supporting our small business. Every purchase helps us continue our mission of spreading faith and inspiration through quality apparel."
+            </p>
+            <p className="text-gray-600 dark:text-gray-400 mt-4">
+              — The Grace, Ongoing Team
+            </p>
+          </div>
+
           {/* CTA Buttons */}
           <div className="grid sm:grid-cols-2 gap-4 pt-8">
-            <Link href="/returns">
+            <Link href="/shop">
               <Button size="lg" className="w-full bg-[#927194] hover:bg-[#927194]/90 text-white">
-                Start a Return
+                Continue Shopping
               </Button>
             </Link>
             <Link href="/track-order">

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Package, Mail, Phone, MessageSquare, CheckCircle } from "lucide-react";
+import { AlertCircle, Mail, Phone, MessageSquare, CheckCircle, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
@@ -10,22 +10,36 @@ export default function ReturnsPage() {
   const [formData, setFormData] = useState({
     orderNumber: "",
     email: "",
-    reason: "",
-    message: "",
+    issueDescription: "",
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // In production, this would send to your backend/email
-    console.log("Return request:", formData);
+
+    // Build email body for damaged/defective items
+    const subject = `Damaged/Defective Item Report - Order ${formData.orderNumber}`;
+    const body = `
+Order Number: ${formData.orderNumber}
+Email: ${formData.email}
+
+Issue Description:
+${formData.issueDescription}
+
+I have attached photos of the damaged/defective item and can provide additional information if needed.
+
+Date of this report: ${new Date().toLocaleDateString()}
+    `.trim();
+
+    // Open email client with pre-filled data
+    window.location.href = `mailto:support@graceongoing.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+    // Show success message
     setIsSubmitted(true);
   };
 
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     setFormData({
       ...formData,
@@ -43,17 +57,20 @@ export default function ReturnsPage() {
         >
           <CheckCircle className="mx-auto mb-6 text-green-500" size={64} />
           <h1 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">
-            Return Request Submitted
+            Email Client Opened
           </h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            Your email client should open with your report pre-filled.
+          </p>
           <p className="text-gray-600 dark:text-gray-400 mb-8">
-            We've received your return request. Our team will review it and contact you within 24-48 hours at {formData.email}.
+            <strong>Important:</strong> Please attach clear photos of the damaged/defective item before sending. We'll review your case and respond within 24-48 hours.
           </p>
           <Button
             size="lg"
             onClick={() => setIsSubmitted(false)}
             className="mr-4"
           >
-            Submit Another Request
+            Submit Another Report
           </Button>
           <Link href="/">
             <Button size="lg" variant="outline">
@@ -73,25 +90,46 @@ export default function ReturnsPage() {
           animate={{ y: 0, opacity: 1 }}
           className="text-center mb-12"
         >
-          <Package className="mx-auto mb-4 text-[#927194]" size={48} />
+          <AlertCircle className="mx-auto mb-4 text-amber-500" size={48} />
           <h1 className="text-4xl font-bold mb-4 text-gray-900 dark:text-white">
-            Returns & Exchanges
+            Damaged or Defective Items
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            We want you to love your purchase! If you're not satisfied, we're here to help.
+            Report damaged or defective items only. All other sales are final.
           </p>
         </motion.div>
 
+        {/* Important Notice */}
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="max-w-3xl mx-auto mb-12"
+        >
+          <div className="bg-amber-50 dark:bg-amber-950/20 rounded-xl p-6 border-2 border-amber-200 dark:border-amber-900">
+            <h2 className="text-xl font-bold mb-3 text-gray-900 dark:text-white flex items-center gap-2">
+              <AlertCircle className="text-amber-600 dark:text-amber-500" size={24} />
+              All Sales Are Final
+            </h2>
+            <p className="text-gray-700 dark:text-gray-300 mb-3">
+              As a small business, we cannot accept returns for change of mind. However, we stand behind the quality of our products.
+            </p>
+            <p className="text-gray-700 dark:text-gray-300">
+              If your item arrived <strong>damaged or defective</strong>, please report it within <strong>7 days</strong> of receiving your order using the form below.
+            </p>
+          </div>
+        </motion.div>
+
         <div className="grid lg:grid-cols-2 gap-12">
-          {/* Return Request Form */}
+          {/* Report Form */}
           <motion.div
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.1 }}
+            transition={{ delay: 0.2 }}
             className="bg-white dark:bg-zinc-900 rounded-xl p-8 border border-gray-200 dark:border-zinc-800"
           >
             <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
-              Start a Return Request
+              Report Damaged/Defective Item
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -127,36 +165,23 @@ export default function ReturnsPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Reason for Return *
-                </label>
-                <select
-                  name="reason"
-                  value={formData.reason}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#927194]"
-                >
-                  <option value="">Select a reason</option>
-                  <option value="wrong-size">Wrong Size</option>
-                  <option value="defective">Defective/Damaged</option>
-                  <option value="not-as-described">Not as Described</option>
-                  <option value="changed-mind">Changed My Mind</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Additional Details
+                  Issue Description *
                 </label>
                 <textarea
-                  name="message"
-                  value={formData.message}
+                  name="issueDescription"
+                  value={formData.issueDescription}
                   onChange={handleChange}
-                  rows={4}
-                  placeholder="Please provide any additional information about your return..."
+                  required
+                  rows={6}
+                  placeholder="Please describe the damage or defect in detail. Remember to attach photos when you send the email."
                   className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#927194] resize-none"
                 />
+              </div>
+
+              <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-4 border border-blue-200 dark:border-blue-900">
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  <strong>📸 Don't forget:</strong> After clicking submit, attach clear photos of the damaged/defective item to the email before sending.
+                </p>
               </div>
 
               <Button
@@ -164,73 +189,87 @@ export default function ReturnsPage() {
                 size="lg"
                 className="w-full bg-[#927194] hover:bg-[#927194]/90 text-white"
               >
-                Submit Return Request
+                Open Email to Report Issue
               </Button>
             </form>
           </motion.div>
 
-          {/* Return Policy & Contact Info */}
+          {/* Information Sidebar */}
           <div className="space-y-6">
-            <motion.div
-              initial={{ x: 20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="bg-white dark:bg-zinc-900 rounded-xl p-8 border border-gray-200 dark:border-zinc-800"
-            >
-              <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
-                Return Policy
-              </h3>
-              <div className="space-y-4 text-gray-600 dark:text-gray-400">
-                <p>
-                  <strong className="text-gray-900 dark:text-white">
-                    30-Day Return Window
-                  </strong>
-                  <br />
-                  Items can be returned within 30 days of delivery.
-                </p>
-                <p>
-                  <strong className="text-gray-900 dark:text-white">
-                    Condition Requirements
-                  </strong>
-                  <br />
-                  Items must be unworn, unwashed, and in original condition with all tags attached.
-                </p>
-                <p>
-                  <strong className="text-gray-900 dark:text-white">
-                    Free Returns
-                  </strong>
-                  <br />
-                  We offer free returns on all orders. A prepaid shipping label will be provided.
-                </p>
-                <p>
-                  <strong className="text-gray-900 dark:text-white">
-                    Refund Timeline
-                  </strong>
-                  <br />
-                  Refunds are processed within 5-7 business days of receiving your return.
-                </p>
-              </div>
-            </motion.div>
-
             <motion.div
               initial={{ x: 20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.3 }}
               className="bg-white dark:bg-zinc-900 rounded-xl p-8 border border-gray-200 dark:border-zinc-800"
             >
+              <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white flex items-center gap-2">
+                <Package size={24} className="text-[#927194]" />
+                What We Need
+              </h3>
+              <ul className="space-y-3 text-gray-700 dark:text-gray-300">
+                <li className="flex items-start gap-2">
+                  <span className="text-[#927194] font-bold mt-1">✓</span>
+                  <span>Clear photos of the damaged/defective item</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#927194] font-bold mt-1">✓</span>
+                  <span>Your order number</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#927194] font-bold mt-1">✓</span>
+                  <span>Detailed description of the issue</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#927194] font-bold mt-1">✓</span>
+                  <span>Report within 7 days of delivery</span>
+                </li>
+              </ul>
+            </motion.div>
+
+            <motion.div
+              initial={{ x: 20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="bg-white dark:bg-zinc-900 rounded-xl p-8 border border-gray-200 dark:border-zinc-800"
+            >
               <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
-                Need Help?
+                What Happens Next?
+              </h3>
+              <ol className="space-y-3 text-gray-700 dark:text-gray-300">
+                <li className="flex gap-3">
+                  <span className="font-bold text-[#927194]">1.</span>
+                  <span>We review your report and photos</span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="font-bold text-[#927194]">2.</span>
+                  <span>If approved, we'll offer a replacement or refund</span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="font-bold text-[#927194]">3.</span>
+                  <span>We'll respond within 24-48 hours</span>
+                </li>
+              </ol>
+            </motion.div>
+
+            <motion.div
+              initial={{ x: 20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="bg-white dark:bg-zinc-900 rounded-xl p-8 border border-gray-200 dark:border-zinc-800"
+            >
+              <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
+                Contact Support
               </h3>
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
                   <Mail className="text-[#927194] mt-1" size={20} />
                   <div>
                     <p className="font-medium text-gray-900 dark:text-white">
-                      Email Us
+                      Email
                     </p>
                     <a
                       href="mailto:support@graceongoing.com"
-                      className="text-[#927194] hover:underline"
+                      className="text-[#927194] hover:underline text-sm"
                     >
                       support@graceongoing.com
                     </a>
@@ -241,11 +280,11 @@ export default function ReturnsPage() {
                   <Phone className="text-[#927194] mt-1" size={20} />
                   <div>
                     <p className="font-medium text-gray-900 dark:text-white">
-                      Call Us
+                      Phone
                     </p>
                     <a
                       href="tel:1-800-GRACE-GO"
-                      className="text-[#927194] hover:underline"
+                      className="text-[#927194] hover:underline text-sm"
                     >
                       1-800-GRACE-GO
                     </a>
@@ -269,18 +308,18 @@ export default function ReturnsPage() {
             <motion.div
               initial={{ x: 20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.4 }}
+              transition={{ delay: 0.6 }}
               className="bg-gradient-to-r from-[#927194]/10 to-[#D08F90]/10 rounded-xl p-6 border border-[#927194]/20"
             >
               <h3 className="font-bold mb-2 text-gray-900 dark:text-white">
-                Track Your Order
+                View Full Policy
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Want to check your order status instead?
+                Read our complete return and refund policy
               </p>
-              <Link href="/track-order">
+              <Link href="/return-policy">
                 <Button variant="outline" className="w-full">
-                  Track Order
+                  Return Policy
                 </Button>
               </Link>
             </motion.div>

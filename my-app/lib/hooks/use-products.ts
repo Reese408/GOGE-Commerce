@@ -19,6 +19,7 @@ async function fetchProducts(count: number = 10): Promise<ProductCardData[]> {
 
     return {
       id: variantId, // Use variant ID instead of product ID for Shopify checkout
+      handle: product.handle, // Use handle for product page routing
       title: product.title,
       description: product.description,
       price: price,

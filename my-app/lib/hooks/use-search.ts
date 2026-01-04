@@ -4,10 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 import { SEARCH_PRODUCTS_QUERY, SEARCH_COLLECTIONS_QUERY } from "@/lib/queries";
 import { ShopifyProduct, ShopifyCollection } from "@/lib/types";
 
-const SHOPIFY_DOMAIN = process.env.NEXT_PUBLIC_SHOPIFY_DOMAIN;
-const SHOPIFY_ACCESS_TOKEN = process.env.NEXT_PUBLIC_SHOPIFY_ACCESS_TOKEN;
+const SHOPIFY_DOMAIN = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
+const SHOPIFY_ACCESS_TOKEN = process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_TOKEN;
 
-async function searchProducts(query: string, first: number = 8) {
+async function searchProducts(query: string, first: number = 50) {
   // Format query for Shopify search - add wildcards for partial matching
   const searchQuery = `title:*${query}* OR product_type:*${query}* OR tag:*${query}*`;
 
@@ -56,24 +56,35 @@ async function searchCollections(query: string, first: number = 3) {
 }
 
 export function useSearch(query: string, enabled: boolean = true) {
+  const isEnabled = enabled && query.trim().length > 0;
+
   const productsQuery = useQuery({
     queryKey: ["search-products", query],
     queryFn: () => searchProducts(query),
-    enabled: enabled && query.length > 0,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    enabled: isEnabled,
+    staleTime: 1000 * 60 * 5,
   });
 
   const collectionsQuery = useQuery({
     queryKey: ["search-collections", query],
     queryFn: () => searchCollections(query),
-    enabled: enabled && query.length > 0,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    enabled: isEnabled,
+    staleTime: 1000 * 60 * 5,
   });
 
   return {
-    products: productsQuery.data || [],
-    collections: collectionsQuery.data || [],
-    isLoading: productsQuery.isLoading || collectionsQuery.isLoading,
-    isError: productsQuery.isError || collectionsQuery.isError,
+    products: productsQuery.data ?? [],
+    collections: collectionsQuery.data ?? [],
+
+    // Only loading when enabled AND actively fetching
+    isLoading:
+      isEnabled &&
+      (productsQuery.isFetching || collectionsQuery.isFetching),
+
+    // Only error when enabled AND a query actually failed
+    isError:
+      isEnabled &&
+      (productsQuery.isError || collectionsQuery.isError),
   };
 }
+

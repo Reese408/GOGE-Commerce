@@ -80,6 +80,7 @@ export interface ShopifyResponse {
 
 export interface ProductCardData {
   id: string;
+  handle: string;
   title: string;
   description: string;
   price: number;

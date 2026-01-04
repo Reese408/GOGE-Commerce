@@ -87,12 +87,7 @@ export const SEARCH_PRODUCTS_QUERY = `
           description
           handle
           productType
-          priceRange {
-            minVariantPrice {
-              amount
-              currencyCode
-            }
-          }
+
           images(first: 1) {
             edges {
               node {
@@ -103,19 +98,27 @@ export const SEARCH_PRODUCTS_QUERY = `
               }
             }
           }
+
           variants(first: 1) {
             edges {
               node {
                 id
+                availableForSale
+                price {
+                  amount
+                  currencyCode
+                }
               }
             }
           }
+
           availableForSale
         }
       }
     }
   }
 `;
+
 
 // Query to search collections
 export const SEARCH_COLLECTIONS_QUERY = `
@@ -133,6 +136,56 @@ export const SEARCH_COLLECTIONS_QUERY = `
           }
         }
       }
+    }
+  }
+`;
+
+// Query to fetch a single product by handle with all variants
+export const PRODUCT_BY_HANDLE_QUERY = `
+  query ProductByHandle($handle: String!) {
+    productByHandle(handle: $handle) {
+      id
+      title
+      description
+      handle
+      priceRange {
+        minVariantPrice {
+          amount
+          currencyCode
+        }
+        maxVariantPrice {
+          amount
+          currencyCode
+        }
+      }
+      images(first: 10) {
+        edges {
+          node {
+            url
+            altText
+            width
+            height
+          }
+        }
+      }
+      variants(first: 20) {
+        edges {
+          node {
+            id
+            title
+            availableForSale
+            price {
+              amount
+              currencyCode
+            }
+            selectedOptions {
+              name
+              value
+            }
+          }
+        }
+      }
+      availableForSale
     }
   }
 `;

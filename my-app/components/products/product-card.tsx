@@ -99,7 +99,7 @@ export function ProductCard({ product, featured = false }: ProductCardProps) {
       transition={{ type: "spring", stiffness: 300, damping: 25 }}
       className="group bg-white dark:bg-zinc-900 overflow-hidden"
     >
-      <Link href={`/products/${encodeURIComponent(product.id)}`}>
+      <Link href={`/products/${product.handle}`}>
         {/* Product Image */}
         {product.imageUrl && (
           <div className="relative aspect-[3/4] overflow-hidden bg-gray-100 dark:bg-zinc-800">
