@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Search, X, Lightbulb, Package, Folder } from "lucide-react";
+import { Search, X, Lightbulb, Package, Folder, TrendingUp } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearch } from "@/lib/hooks/use-search";
@@ -10,8 +10,8 @@ import { useQuery } from "@tanstack/react-query";
 import { ShopifyProduct, ShopifyCollection } from "@/lib/types";
 import { ALL_PRODUCTS_QUERY } from "@/lib/queries";
 
-const SHOPIFY_DOMAIN = process.env.NEXT_PUBLIC_SHOPIFY_DOMAIN;
-const SHOPIFY_ACCESS_TOKEN = process.env.NEXT_PUBLIC_SHOPIFY_ACCESS_TOKEN;
+const SHOPIFY_DOMAIN = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
+const SHOPIFY_ACCESS_TOKEN = process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_TOKEN;
 
 interface SearchDropdownProps {
   placeholder?: string;
@@ -39,6 +39,14 @@ function calculateSimilarity(str1: string, str2: string): number {
 
   return 0;
 }
+
+// Popular/suggested search terms - customize these based on your store
+const SUGGESTED_SEARCHES = [
+  "Shirts",
+  "Hoodies",
+  "Best Sellers",
+  "All Products",
+];
 
 export function SearchDropdown({ placeholder = "Search products..." }: SearchDropdownProps) {
   const [query, setQuery] = useState("");
@@ -165,7 +173,28 @@ export function SearchDropdown({ placeholder = "Search products..." }: SearchDro
 
   const showDropdown = isFocused;
   const hasResults = products.length > 0 || collections.length > 0;
-  const showPopular = debouncedQuery.length === 0 && allProductsData && allProductsData.length > 0;
+
+  // Lock body scroll when dropdown is open (Nike-style)
+  useEffect(() => {
+    if (showDropdown) {
+      // Save original body overflow
+      const originalOverflow = document.body.style.overflow;
+      const originalPaddingRight = document.body.style.paddingRight;
+
+      // Get scrollbar width to prevent layout shift
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+
+      // Lock scroll and compensate for scrollbar
+      document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+
+      return () => {
+        // Restore original styles
+        document.body.style.overflow = originalOverflow;
+        document.body.style.paddingRight = originalPaddingRight;
+      };
+    }
+  }, [showDropdown]);
 
   // Debug logs
   useEffect(() => {
@@ -175,13 +204,12 @@ export function SearchDropdown({ placeholder = "Search products..." }: SearchDro
         isLoading,
         isLoadingAll,
         hasResults,
-        showPopular,
         productsCount: products.length,
         allProductsCount: allProductsData?.length || 0,
         allError
       });
     }
-  }, [isFocused, debouncedQuery, isLoading, isLoadingAll, hasResults, showPopular, products, allProductsData, allError]);
+  }, [isFocused, debouncedQuery, isLoading, isLoadingAll, hasResults, products, allProductsData, allError]);
 
   return (
     <div className="relative w-full max-w-md">
@@ -228,292 +256,289 @@ export function SearchDropdown({ placeholder = "Search products..." }: SearchDro
         )}
       </form>
 
-      {/* Invisible bridge to keep dropdown open */}
-      {showDropdown && (
-        <div className="absolute left-0 right-0 h-2 top-full pointer-events-auto" />
-      )}
-
-      {/* Search Dropdown */}
+      {/* Search Dropdown - Nike-inspired, full-width design */}
       {showDropdown && (
         <div
           ref={dropdownRef}
-          className="absolute left-0 right-0 top-full pt-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200"
+          className="fixed left-0 right-0 top-[80px] md:top-18 z-40 animate-in fade-in slide-in-from-top-2 duration-200"
         >
-          <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-zinc-800 overflow-hidden max-h-[600px] overflow-y-auto">
-            {showPopular ? (
-              <div className="p-6">
-                <div className="flex items-center gap-2 mb-4 px-2">
-                  <Package size={16} className="text-[#927194] dark:text-[#D08F90]" />
-                  <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                    Popular Products
-                  </h3>
-                </div>
-                <div className="space-y-2">
-                  {allProductsData.slice(0, 6).map((product: ShopifyProduct) => {
-                    const imageUrl = product.images.edges[0]?.node.url;
-                    const price = parseFloat(product.priceRange.minVariantPrice.amount);
+          <div className="bg-white dark:bg-zinc-900 shadow-2xl border-t border-gray-200 dark:border-zinc-800" style={{ maxHeight: 'calc(100vh - 80px)', overflowY: 'auto' }}>
+            <div className="container mx-auto px-4 md:px-6 py-6 md:py-8 max-w-6xl">
 
-                    return (
-                      <Link
-                        key={product.id}
-                        href={`/products/${product.handle}`}
-                        onClick={() => setIsFocused(false)}
-                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors group"
-                      >
-                        {imageUrl && (
-                          <div className="relative w-16 h-16 rounded-md overflow-hidden bg-gray-100 dark:bg-zinc-800 shrink-0">
-                            <Image
-                              src={imageUrl}
-                              alt={product.title}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 dark:text-white group-hover:text-[#927194] dark:group-hover:text-[#D08F90] transition-colors truncate">
-                            {product.title}
-                          </p>
-                          {product.productType && (
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                              {product.productType}
-                            </p>
-                          )}
-                          <p className="text-sm font-semibold text-[#927194] dark:text-[#D08F90] mt-1">
-                            {new Intl.NumberFormat("en-US", {
-                              style: "currency",
-                              currency: product.priceRange.minVariantPrice.currencyCode,
-                            }).format(price)}
-                          </p>
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </div>
-                <Link
-                  href="/shop"
-                  onClick={() => setIsFocused(false)}
-                  className="block mt-4 p-3 text-center text-sm font-medium text-[#927194] dark:text-[#D08F90] hover:bg-gray-50 dark:hover:bg-zinc-800 rounded-lg transition-colors"
-                >
-                  View All Products
-                </Link>
-              </div>
-            ) : isLoading ? (
-              <div className="p-8 text-center">
-                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-[#927194] dark:border-zinc-700 dark:border-t-[#D08F90]" />
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-3">
-                  Searching...
-                </p>
-              </div>
-            ) : hasResults ? (
-              <div className="p-6">
-                {/* Collections Section */}
-                {collections.length > 0 && (
-                  <div className="mb-6">
-                    <div className="flex items-center gap-2 mb-3 px-2">
-                      <Folder size={16} className="text-[#927194] dark:text-[#D08F90]" />
-                      <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                        Collections
+              {/* Empty/Initial State - Show Suggested Searches */}
+              {debouncedQuery.length === 0 ? (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                  {/* Left Column - Suggested Searches */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-6">
+                      <TrendingUp size={20} className="text-[#927194] dark:text-[#D08F90]" />
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                        Popular Searches
                       </h3>
                     </div>
                     <div className="space-y-2">
-                      {collections.map((collection: ShopifyCollection) => (
-                        <Link
-                          key={collection.id}
-                          href={`/collections/${collection.handle}`}
-                          onClick={() => setIsFocused(false)}
-                          className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors group"
+                      {SUGGESTED_SEARCHES.map((searchTerm) => (
+                        <button
+                          key={searchTerm}
+                          onClick={() => {
+                            setQuery(searchTerm);
+                            setDebouncedQuery(searchTerm);
+                          }}
+                          className="w-full text-left px-5 py-4 rounded-xl hover:bg-gray-50 dark:hover:bg-zinc-800 transition-all group flex items-center justify-between border border-transparent hover:border-gray-200 dark:hover:border-zinc-700"
                         >
-                          {collection.image && (
-                            <div className="relative w-12 h-12 rounded-md overflow-hidden bg-gray-100 dark:bg-zinc-800 flex-shrink-0">
-                              <Image
-                                src={collection.image.url}
-                                alt={collection.image.altText || collection.title}
-                                fill
-                                className="object-cover"
-                              />
-                            </div>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 dark:text-white group-hover:text-[#927194] dark:group-hover:text-[#D08F90] transition-colors">
-                              {collection.title}
-                            </p>
-                            {collection.description && (
-                              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                {collection.description}
-                              </p>
-                            )}
-                          </div>
-                        </Link>
+                          <span className="text-base text-gray-700 dark:text-gray-300 group-hover:text-[#927194] dark:group-hover:text-[#D08F90] font-medium">
+                            {searchTerm}
+                          </span>
+                          <Search size={18} className="text-gray-300 dark:text-zinc-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </button>
                       ))}
                     </div>
                   </div>
-                )}
 
-                {/* Products Section */}
-                {products.length > 0 && (
-                  <div>
-                    <div className="flex items-center gap-2 mb-3 px-2">
-                      <Package size={16} className="text-[#927194] dark:text-[#D08F90]" />
-                      <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                        Products
-                      </h3>
+                  {/* Right Column - Popular Products */}
+                  {allProductsData && allProductsData.length > 0 ? (
+                    <div>
+                      <div className="flex items-center gap-2 mb-6">
+                        <Package size={20} className="text-[#927194] dark:text-[#D08F90]" />
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                          Popular Products
+                        </h3>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        {allProductsData.slice(0, 6).map((product: ShopifyProduct) => {
+                          const imageUrl = product.images.edges[0]?.node.url;
+                          const price = parseFloat(product.priceRange.minVariantPrice.amount);
+
+                          return (
+                            <Link
+                              key={product.id}
+                              href={`/products/${product.handle}`}
+                              onClick={() => setIsFocused(false)}
+                              className="group"
+                            >
+                              <div className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-zinc-800 mb-3">
+                                {imageUrl && (
+                                  <Image
+                                    src={imageUrl}
+                                    alt={product.title}
+                                    fill
+                                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                                  />
+                                )}
+                              </div>
+                              <p className="text-sm font-medium text-gray-900 dark:text-white line-clamp-2 mb-1 min-h-[40px]">
+                                {product.title}
+                              </p>
+                              <p className="text-sm font-semibold text-[#927194] dark:text-[#D08F90]">
+                                {new Intl.NumberFormat("en-US", {
+                                  style: "currency",
+                                  currency: product.priceRange.minVariantPrice.currencyCode,
+                                }).format(price)}
+                              </p>
+                            </Link>
+                          );
+                        })}
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      {products.map((product: ShopifyProduct) => {
-                        const imageUrl = product.images.edges[0]?.node.url;
-                        const price = parseFloat(product.priceRange.minVariantPrice.amount);
-
-                        return (
+                  ) : isLoadingAll ? (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-[#927194] dark:border-zinc-700 dark:border-t-[#D08F90]" />
+                    </div>
+                  ) : null}
+                </div>
+              ) : isLoading ? (
+                // Loading state
+                <div className="flex items-center justify-center py-20">
+                  <div className="text-center">
+                    <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-gray-300 border-t-[#927194] dark:border-zinc-700 dark:border-t-[#D08F90] mb-4" />
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Searching...
+                    </p>
+                  </div>
+                </div>
+              ) : hasResults ? (
+                // Search Results
+                <div className="space-y-8">
+                  {/* Collections Section */}
+                  {collections.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-4">
+                        <Folder size={20} className="text-[#927194] dark:text-[#D08F90]" />
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                          Collections ({collections.length})
+                        </h3>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {collections.map((collection: ShopifyCollection) => (
                           <Link
-                            key={product.id}
-                            href={`/products/${product.handle}`}
+                            key={collection.id}
+                            href={`/collections/${collection.handle}`}
                             onClick={() => setIsFocused(false)}
-                            className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors group"
+                            className="flex items-center gap-3 p-4 rounded-xl hover:bg-gray-50 dark:hover:bg-zinc-800 transition-all border border-transparent hover:border-gray-200 dark:hover:border-zinc-700 group"
                           >
-                            {imageUrl && (
-                              <div className="relative w-16 h-16 rounded-md overflow-hidden bg-gray-100 dark:bg-zinc-800 flex-shrink-0">
+                            {collection.image && (
+                              <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-gray-100 dark:bg-zinc-800 shrink-0">
                                 <Image
-                                  src={imageUrl}
-                                  alt={product.title}
+                                  src={collection.image.url}
+                                  alt={collection.image.altText || collection.title}
                                   fill
                                   className="object-cover"
                                 />
                               </div>
                             )}
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 dark:text-white group-hover:text-[#927194] dark:group-hover:text-[#D08F90] transition-colors truncate">
+                              <p className="text-sm font-medium text-gray-900 dark:text-white group-hover:text-[#927194] dark:group-hover:text-[#D08F90] transition-colors">
+                                {collection.title}
+                              </p>
+                              {collection.description && (
+                                <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1 mt-1">
+                                  {collection.description}
+                                </p>
+                              )}
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Products Section */}
+                  {products.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-4">
+                        <Package size={20} className="text-[#927194] dark:text-[#D08F90]" />
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                          Products ({products.length})
+                        </h3>
+                      </div>
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        {products.slice(0, 8).map((product: ShopifyProduct) => {
+                          const imageUrl = product.images.edges[0]?.node.url;
+                          const price = parseFloat(product.priceRange.minVariantPrice.amount);
+
+                          return (
+                            <Link
+                              key={product.id}
+                              href={`/products/${product.handle}`}
+                              onClick={() => setIsFocused(false)}
+                              className="group"
+                            >
+                              <div className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-zinc-800 mb-3">
+                                {imageUrl && (
+                                  <Image
+                                    src={imageUrl}
+                                    alt={product.title}
+                                    fill
+                                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                                  />
+                                )}
+                              </div>
+                              <p className="text-sm font-medium text-gray-900 dark:text-white line-clamp-2 mb-1 min-h-[40px]">
                                 {product.title}
                               </p>
                               {product.productType && (
-                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
                                   {product.productType}
                                 </p>
                               )}
-                              <p className="text-sm font-semibold text-[#927194] dark:text-[#D08F90] mt-1">
+                              <p className="text-sm font-semibold text-[#927194] dark:text-[#D08F90]">
                                 {new Intl.NumberFormat("en-US", {
                                   style: "currency",
                                   currency: product.priceRange.minVariantPrice.currencyCode,
                                 }).format(price)}
                               </p>
-                            </div>
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
+                            </Link>
+                          );
+                        })}
+                      </div>
 
-                {/* View All Results Link */}
-                <Link
-                  href={`/search?q=${encodeURIComponent(query)}`}
-                  onClick={() => setIsFocused(false)}
-                  className="block mt-4 p-3 text-center text-sm font-medium text-[#927194] dark:text-[#D08F90] hover:bg-gray-50 dark:hover:bg-zinc-800 rounded-lg transition-colors"
-                >
-                  View all results for &quot;{query}&quot;
-                </Link>
-              </div>
-            ) : similarProducts.length > 0 ? (
-              <div className="p-6">
-                <div className="text-center mb-6">
-                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-yellow-100 dark:bg-yellow-900/30 mb-3">
-                    <Lightbulb className="text-yellow-600 dark:text-yellow-500" size={20} />
+                      {/* View All Results Link */}
+                      <Link
+                        href={`/search?q=${encodeURIComponent(query)}`}
+                        onClick={() => setIsFocused(false)}
+                        className="block mt-6 p-4 text-center text-base font-medium text-white bg-[#927194] hover:bg-[#7d5f7e] dark:bg-[#D08F90] dark:hover:bg-[#c07e7f] rounded-xl transition-colors"
+                      >
+                        View all results for &quot;{query}&quot;
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              ) : similarProducts.length > 0 ? (
+                // Similar products (spelling suggestions)
+                <div className="text-center">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-yellow-100 dark:bg-yellow-900/30 mb-4">
+                    <Lightbulb className="text-yellow-600 dark:text-yellow-500" size={24} />
                   </div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
                     No exact matches found
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-8">
                     Here are some similar products you might like
                   </p>
-                </div>
 
-                <div className="space-y-2">
-                  {similarProducts.map((product: ShopifyProduct) => {
-                    const imageUrl = product.images.edges[0]?.node.url;
-                    const price = parseFloat(product.priceRange.minVariantPrice.amount);
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+                    {similarProducts.map((product: ShopifyProduct) => {
+                      const imageUrl = product.images.edges[0]?.node.url;
+                      const price = parseFloat(product.priceRange.minVariantPrice.amount);
 
-                    return (
-                      <Link
-                        key={product.id}
-                        href={`/products/${product.handle}`}
-                        onClick={() => setIsFocused(false)}
-                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors group"
-                      >
-                        {imageUrl && (
-                          <div className="relative w-16 h-16 rounded-md overflow-hidden bg-gray-100 dark:bg-zinc-800 flex-shrink-0">
-                            <Image
-                              src={imageUrl}
-                              alt={product.title}
-                              fill
-                              className="object-cover"
-                            />
+                      return (
+                        <Link
+                          key={product.id}
+                          href={`/products/${product.handle}`}
+                          onClick={() => setIsFocused(false)}
+                          className="group"
+                        >
+                          <div className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-zinc-800 mb-3">
+                            {imageUrl && (
+                              <Image
+                                src={imageUrl}
+                                alt={product.title}
+                                fill
+                                className="object-cover group-hover:scale-105 transition-transform duration-300"
+                              />
+                            )}
                           </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 dark:text-white group-hover:text-[#927194] dark:group-hover:text-[#D08F90] transition-colors truncate">
+                          <p className="text-sm font-medium text-gray-900 dark:text-white line-clamp-2 mb-1 min-h-[40px]">
                             {product.title}
                           </p>
                           {product.productType && (
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
                               {product.productType}
                             </p>
                           )}
-                          <p className="text-sm font-semibold text-[#927194] dark:text-[#D08F90] mt-1">
+                          <p className="text-sm font-semibold text-[#927194] dark:text-[#D08F90]">
                             {new Intl.NumberFormat("en-US", {
                               style: "currency",
                               currency: product.priceRange.minVariantPrice.currencyCode,
                             }).format(price)}
                           </p>
-                        </div>
-                      </Link>
-                    );
-                  })}
+                        </Link>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ) : debouncedQuery.length > 0 ? (
-              <div className="p-8 text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-zinc-800 mb-4">
-                  <Search className="text-gray-400 dark:text-zinc-600" size={24} />
+              ) : (
+                // No results
+                <div className="text-center py-20">
+                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 dark:bg-zinc-800 mb-6">
+                    <Search className="text-gray-400 dark:text-zinc-600" size={32} />
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                    No results found
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-8">
+                    Try searching with different keywords
+                  </p>
+                  <Link
+                    href="/shop"
+                    onClick={() => setIsFocused(false)}
+                    className="inline-block px-6 py-3 text-base font-medium text-white bg-[#927194] hover:bg-[#7d5f7e] dark:bg-[#D08F90] dark:hover:bg-[#c07e7f] rounded-xl transition-colors"
+                  >
+                    Browse All Products
+                  </Link>
                 </div>
-                <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
-                  No results found
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Try searching with different keywords
-                </p>
-              </div>
-            ) : isLoadingAll ? (
-              <div className="p-8 text-center">
-                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-[#927194] dark:border-zinc-700 dark:border-t-[#D08F90]" />
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-3">
-                  Loading products...
-                </p>
-              </div>
-            ) : allError ? (
-              <div className="p-8 text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 mb-4">
-                  <Search className="text-red-600 dark:text-red-500" size={24} />
-                </div>
-                <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
-                  Error loading products
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {allError instanceof Error ? allError.message : "Please try again"}
-                </p>
-              </div>
-            ) : (
-              <div className="p-8 text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-zinc-800 mb-4">
-                  <Search className="text-gray-400 dark:text-zinc-600" size={24} />
-                </div>
-                <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
-                  No products available
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Start typing to search
-                </p>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       )}

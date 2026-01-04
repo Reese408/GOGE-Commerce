@@ -1,10 +1,17 @@
 import { AboutHero } from "@/components/about/about-hero";
 import { FounderCard } from "@/components/about/founder-card";
 import { MissionSection } from "@/components/about/mission-section";
+import { VideoIntro } from "@/components/about/video-intro";
 
 export default function AboutPage() {
   return (
     <div>
+      {/* Video Intro - Upload your video to /public/videos/making-process.mp4 */}
+      <VideoIntro
+        videoSrc="/videos/making-process.mp4"
+        posterSrc="/videos/making-process-poster.jpg"
+      />
+
       <AboutHero />
 
       {/* Story Section */}

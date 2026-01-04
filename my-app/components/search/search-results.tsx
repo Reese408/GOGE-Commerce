@@ -19,24 +19,18 @@ export function SearchResults({ query }: SearchResultsProps) {
 
   // Convert ShopifyProduct to ProductCardData
 const productCards = products.map((product) => {
-  const firstVariantEdge = product.variants?.edges?.[0];
-  const firstImageEdge = product.images?.edges?.[0];
-
-  const firstVariant = firstVariantEdge?.node;
-  const firstImage = firstImageEdge?.node;
+  const firstVariant = product.variants?.edges?.[0]?.node;
+  const firstImage = product.images?.edges?.[0]?.node;
 
   return {
-    // Stable React key
     id: firstVariant?.id ?? product.id,
-
-    // REQUIRED for cart logic
     variantId: firstVariant?.id,
 
     handle: product.handle,
     title: product.title,
     description: product.description,
 
-    price: firstVariant?.price?.amount
+    price: firstVariant?.price
       ? parseFloat(firstVariant.price.amount)
       : parseFloat(product.priceRange.minVariantPrice.amount),
 
@@ -50,6 +44,7 @@ const productCards = products.map((product) => {
       firstVariant?.availableForSale ?? product.availableForSale,
   };
 });
+
 
 
   const hasResults = productCards.length > 0 || collections.length > 0;

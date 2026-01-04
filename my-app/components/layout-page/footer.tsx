@@ -162,10 +162,15 @@ export function Footer() {
           className="mt-12 pt-8 border-t border-gray-200 dark:border-zinc-800"
         >
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
-              © {new Date().getFullYear()} Grace, Ongoing. Made with{" "}
-              <Heart size={14} className="text-[#D08F90] fill-current" /> by Amanda Kolar
-            </p>
+            <div className="text-center md:text-left">
+              <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-center md:justify-start gap-2">
+                © {new Date().getFullYear()} Grace, Ongoing LLC. Made with{" "}
+                <Heart size={14} className="text-[#D08F90] fill-current" /> by Amanda Kolar
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                App powered by Shopify
+              </p>
+            </div>
             <div className="flex items-center gap-6">
               <Link
                 href="/privacy"

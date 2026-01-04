@@ -88,6 +88,13 @@ export const SEARCH_PRODUCTS_QUERY = `
           handle
           productType
 
+          priceRange {
+            minVariantPrice {
+              amount
+              currencyCode
+            }
+          }
+
           images(first: 1) {
             edges {
               node {
