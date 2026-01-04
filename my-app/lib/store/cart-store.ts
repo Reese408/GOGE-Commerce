@@ -24,6 +24,9 @@ interface CartStore {
   // Computed values
   totalItems: () => number;
   totalPrice: () => number;
+  totalWeight: () => number;
+  getRemainingForFreeShipping: () => number;
+  qualifiesForFreeShipping: () => boolean;
 }
 
 // Create the cart store with persistence
@@ -115,6 +118,25 @@ export const useCartStore = create<CartStore>()(
           (total, item) => total + item.price * item.quantity,
           0
         );
+      },
+
+      totalWeight: () => {
+        return get().items.reduce(
+          (total, item) => total + (item.weight || 0.5) * item.quantity,
+          0
+        );
+      },
+
+      getRemainingForFreeShipping: () => {
+        const FREE_SHIPPING_THRESHOLD = 75;
+        const subtotal = get().totalPrice();
+        const remaining = FREE_SHIPPING_THRESHOLD - subtotal;
+        return remaining > 0 ? remaining : 0;
+      },
+
+      qualifiesForFreeShipping: () => {
+        const FREE_SHIPPING_THRESHOLD = 75;
+        return get().totalPrice() >= FREE_SHIPPING_THRESHOLD;
       },
     }),
     {

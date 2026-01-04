@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Plus, Minus, Trash2, ShoppingBag } from "lucide-react";
+import { X, Plus, Minus, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/lib/store/cart-store";
 import { UndoToast } from "@/components/cart/undo-toast";
-import { RewardsProgressBar } from "@/components/cart/rewards-progress-bar";
+import { FreeShippingProgress } from "@/components/cart/free-shipping-progress";
+import { useProducts } from "@/lib/hooks/use-products";
 
 export function CartSidebar() {
   const router = useRouter();
@@ -18,7 +20,33 @@ export function CartSidebar() {
     {}
   );
 
+  // Fetch products for "You May Also Like" section
+  const { data: allProducts } = useProducts(8);
+
+  // Get random 4 products that are not in cart
+  const suggestedProducts = allProducts
+    ?.filter(product => !items.some(item => item.id === product.id))
+    .sort(() => Math.random() - 0.5)
+    .slice(0, 4) || [];
+
   const total = totalPrice();
+
+  // Lock body scroll when cart is open
+  useEffect(() => {
+    if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
+      const originalPaddingRight = document.body.style.paddingRight;
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+
+      document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+
+      return () => {
+        document.body.style.overflow = originalOverflow;
+        document.body.style.paddingRight = originalPaddingRight;
+      };
+    }
+  }, [isOpen]);
 
   const handleImageLoad = (itemId: string) => {
     setLoadingImages((prev) => ({ ...prev, [itemId]: false }));
@@ -42,13 +70,13 @@ export function CartSidebar() {
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
           />
 
-          {/* Sidebar */}
+          {/* Cart Modal - Bottom slide-up on mobile (Gymshark style), sidebar on desktop */}
           <motion.div
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed right-0 top-0 h-full w-full sm:w-[400px] bg-white dark:bg-zinc-900 shadow-2xl z-50 flex flex-col"
+            initial={{ y: "100%", x: 0 }}
+            animate={{ y: 0, x: 0 }}
+            exit={{ y: "100%", x: 0 }}
+            transition={{ type: "spring", damping: 30, stiffness: 300 }}
+            className="fixed bottom-0 left-0 right-0 md:right-0 md:left-auto md:top-0 md:bottom-auto h-[90vh] md:h-full w-full md:w-[450px] bg-white dark:bg-zinc-900 shadow-2xl z-50 flex flex-col rounded-t-3xl md:rounded-none"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-zinc-800">
@@ -93,9 +121,9 @@ export function CartSidebar() {
                 </div>
               ) : (
                 <>
-                  {/* Rewards Progress Bar */}
-                  <div className="px-6 pt-6 pb-4 border-b border-gray-200 dark:border-zinc-800">
-                    <RewardsProgressBar currentTotal={total} />
+                  {/* Free Shipping Progress */}
+                  <div className="px-6 pt-6 pb-4">
+                    <FreeShippingProgress currentSubtotal={total} />
                   </div>
 
                   {/* Cart Items List */}
@@ -189,9 +217,65 @@ export function CartSidebar() {
               )}
             </div>
 
+            {/* "You May Also Like" Section - Compact horizontal scroll */}
+            {items.length > 0 && suggestedProducts.length > 0 && (
+              <div className="border-t border-gray-200 dark:border-zinc-800 py-3 px-4 bg-gray-50 dark:bg-zinc-800/50">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                    You May Also Like
+                  </h3>
+                  <Link
+                    href="/shop"
+                    onClick={closeCart}
+                    className="flex items-center gap-1 text-xs font-medium text-[#927194] dark:text-[#D08F90] hover:underline"
+                  >
+                    Shop All
+                    <ArrowRight size={12} />
+                  </Link>
+                </div>
+
+                {/* Horizontal Scroll Product List */}
+                <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-2">
+                  {suggestedProducts.map((product) => (
+                    <Link
+                      key={product.id}
+                      href={`/products/${product.handle}`}
+                      onClick={closeCart}
+                      className="group flex-shrink-0"
+                    >
+                      <div className="w-24 bg-white dark:bg-zinc-900 rounded-md overflow-hidden border border-gray-200 dark:border-zinc-700 hover:border-[#927194] dark:hover:border-[#D08F90] transition-colors">
+                        {/* Product Image */}
+                        {product.imageUrl && (
+                          <div className="relative aspect-square bg-gray-100 dark:bg-zinc-800">
+                            <Image
+                              src={product.imageUrl}
+                              alt={product.title}
+                              fill
+                              className="object-cover group-hover:scale-105 transition-transform duration-300"
+                              sizes="100px"
+                            />
+                          </div>
+                        )}
+
+                        {/* Product Info - Compact */}
+                        <div className="p-1.5">
+                          <h4 className="text-[10px] font-medium text-gray-900 dark:text-white line-clamp-1 mb-0.5">
+                            {product.title}
+                          </h4>
+                          <p className="text-xs font-bold text-[#927194] dark:text-[#D08F90]">
+                            ${product.price}
+                          </p>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Footer */}
             {items.length > 0 && (
-              <div className="border-t border-gray-200 dark:border-zinc-800 p-6 bg-gray-50 dark:bg-zinc-800/50">
+              <div className="border-t border-gray-200 dark:border-zinc-800 p-6 bg-white dark:bg-zinc-900">
                 {/* Subtotal */}
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-lg font-semibold text-gray-900 dark:text-white">

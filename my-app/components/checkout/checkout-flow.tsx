@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/lib/store/cart-store";
 import { OrderSummary } from "./order-summary";
-import { RewardsProgress } from "./rewards-progress";
+import { FREE_SHIPPING_THRESHOLD, SHIPPING_TIERS } from "@/lib/constants";
 
 interface ShippingFormData {
   email: string;
@@ -35,35 +35,36 @@ interface ShippingMethod {
   description: string;
   price: number;
   estimatedDays: string;
+  minWeight?: number;
+  maxWeight?: number;
 }
 
+// Shipping methods matching Shopify configuration
+// NOTE: These are for UX display only - Shopify checkout determines actual shipping cost
 const SHIPPING_METHODS: ShippingMethod[] = [
+  {
+    id: "economy",
+    name: "Economy Shipping",
+    description: "5-7 business days",
+    price: SHIPPING_TIERS.ECONOMY_0_5.cost,
+    estimatedDays: "5-7",
+    minWeight: 0,
+    maxWeight: 5,
+  },
   {
     id: "standard",
     name: "Standard Shipping",
-    description: "5-7 business days",
-    price: 5.99,
-    estimatedDays: "5-7",
-  },
-  {
-    id: "express",
-    name: "Express Shipping",
-    description: "2-3 business days",
-    price: 12.99,
-    estimatedDays: "2-3",
-  },
-  {
-    id: "overnight",
-    name: "Overnight Shipping",
-    description: "1 business day",
-    price: 24.99,
-    estimatedDays: "1",
+    description: "3-5 business days",
+    price: SHIPPING_TIERS.STANDARD_0_1.cost,
+    estimatedDays: "3-5",
+    minWeight: 0,
+    maxWeight: 1,
   },
 ];
 
 export function CheckoutFlow() {
   const router = useRouter();
-  const { items, totalPrice } = useCartStore();
+  const { items, totalPrice, totalWeight } = useCartStore();
   const [step, setStep] = useState<"shipping" | "payment" | "review">(
     "shipping"
   );
@@ -82,13 +83,38 @@ export function CheckoutFlow() {
     phone: "",
   });
 
-  const [selectedShipping, setSelectedShipping] = useState<string>("standard");
+  const [selectedShipping, setSelectedShipping] = useState<string>("economy");
 
   const subtotal = totalPrice();
-  const shippingMethod = SHIPPING_METHODS.find(
-    (method) => method.id === selectedShipping
-  );
-  const shippingCost = subtotal >= 50 ? 0 : shippingMethod?.price || 0;
+  const cartWeight = totalWeight();
+
+  // Calculate shipping cost based on Shopify rules (UX display only)
+  const getShippingCost = () => {
+    // Free shipping for orders $75+
+    if (subtotal >= FREE_SHIPPING_THRESHOLD) {
+      return 0;
+    }
+
+    // Economy shipping tiers based on weight
+    if (selectedShipping === "economy") {
+      if (cartWeight >= 5 && cartWeight <= 70) {
+        return SHIPPING_TIERS.ECONOMY_5_70.cost;
+      }
+      return SHIPPING_TIERS.ECONOMY_0_5.cost;
+    }
+
+    // Standard shipping tiers based on weight
+    if (selectedShipping === "standard") {
+      if (cartWeight > 1 && cartWeight <= 5) {
+        return SHIPPING_TIERS.STANDARD_1_5.cost;
+      }
+      return SHIPPING_TIERS.STANDARD_0_1.cost;
+    }
+
+    return 0;
+  };
+
+  const shippingCost = getShippingCost();
   const tax = subtotal * 0.08; // 8% tax rate
   const total = subtotal + shippingCost + tax;
 
@@ -119,26 +145,32 @@ export function CheckoutFlow() {
     setIsProcessing(true);
 
     try {
-      // Create Shopify checkout with items and shipping info
+      // Redirect to Shopify checkout with cart items AND pre-filled shipping info
       const shopifyDomain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
 
-      // Build cart items for URL
+      // Build cart items for URL using variant IDs from item.id
       const cartItems = items
         .map((item) => {
-          // Extract numeric ID from Shopify GID and remove any size suffix
-          // GID format: gid://shopify/ProductVariant/123456789
-          // productId might have size suffix like: 123456789-L
-          const productIdPart = item.productId.split("/").pop() || item.productId;
-          const numericId = productIdPart.split("-")[0]; // Remove size suffix
+          // The item.id contains the variant ID
+          // Extract numeric ID from Shopify GID if needed
+          let variantId = item.id;
+
+          // If it's a full GID (gid://shopify/ProductVariant/123456789), extract numeric part
+          if (variantId.includes("gid://shopify/ProductVariant/")) {
+            variantId = variantId.split("/").pop() || variantId;
+          }
+
+          // Remove any size suffix that might have been added (e.g., "123456789-L")
+          const numericId = variantId.split("-")[0];
+
           return `${numericId}:${item.quantity}`;
         })
         .join(",");
 
-      // Create checkout URL with pre-filled customer info
-      // Shopify will use URL parameters to pre-fill the checkout form
+      // Create checkout URL with cart items and pre-filled customer info
       const checkoutUrl = new URL(`https://${shopifyDomain}/cart/${cartItems}`);
 
-      // Add customer info as query parameters (Shopify will pre-fill these)
+      // Add shipping info as query parameters to pre-fill Shopify checkout
       checkoutUrl.searchParams.set("checkout[email]", shippingData.email);
       checkoutUrl.searchParams.set("checkout[shipping_address][first_name]", shippingData.firstName);
       checkoutUrl.searchParams.set("checkout[shipping_address][last_name]", shippingData.lastName);
@@ -155,8 +187,9 @@ export function CheckoutFlow() {
       }
 
       console.log("Redirecting to Shopify checkout with pre-filled info:", checkoutUrl.toString());
+      console.log("Cart items:", cartItems);
 
-      // Redirect to Shopify checkout
+      // Redirect to Shopify cart/checkout with pre-filled data
       window.location.href = checkoutUrl.toString();
     } catch (error) {
       console.error("Checkout error:", error);
@@ -169,30 +202,34 @@ export function CheckoutFlow() {
     setIsProcessing(true);
 
     try {
-      // Build cart URL for Shopify checkout
+      // Redirect directly to Shopify checkout with cart items
       const shopifyDomain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
 
-      // Create cart items string for Shopify
-      // Format: variant_id:quantity,variant_id:quantity
+      // Build cart items for URL using variant IDs from item.id
+      // Shopify cart URL format: /cart/VARIANT_ID:QUANTITY,VARIANT_ID:QUANTITY
       const cartItems = items
         .map((item) => {
-          // Extract numeric ID from Shopify GID and remove any size suffix
-          // GID format: gid://shopify/ProductVariant/123456789
-          // productId might have size suffix like: 123456789-L
-          const productIdPart = item.productId.split("/").pop() || item.productId;
-          const numericId = productIdPart.split("-")[0]; // Remove size suffix
+          // The item.id contains the variant ID
+          // Extract numeric ID from Shopify GID if needed
+          let variantId = item.id;
+
+          // If it's a full GID (gid://shopify/ProductVariant/123456789), extract numeric part
+          if (variantId.includes("gid://shopify/ProductVariant/")) {
+            variantId = variantId.split("/").pop() || variantId;
+          }
+
+          // Remove any size suffix that might have been added (e.g., "123456789-L")
+          const numericId = variantId.split("-")[0];
+
           return `${numericId}:${item.quantity}`;
         })
         .join(",");
 
-      // Shopify cart URL format
-      const checkoutUrl = `https://${shopifyDomain}/cart/${cartItems}`;
-
-      console.log("Redirecting to Shopify checkout:", checkoutUrl);
+      console.log("Redirecting to Shopify cart:", `https://${shopifyDomain}/cart/${cartItems}`);
       console.log("Cart items:", items);
 
-      // Redirect to Shopify checkout
-      window.location.href = checkoutUrl;
+      // Redirect to Shopify cart/checkout
+      window.location.href = `https://${shopifyDomain}/cart/${cartItems}`;
     } catch (error) {
       console.error("Checkout error:", error);
       alert("There was an error processing your order. Please try again.");
@@ -404,47 +441,79 @@ export function CheckoutFlow() {
 
                     {/* Shipping Methods */}
                     <div className="pt-6 border-t border-gray-200 dark:border-zinc-700">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                        Shipping Method
-                      </h3>
-                      <div className="space-y-3">
-                        {SHIPPING_METHODS.map((method) => (
-                          <label
-                            key={method.id}
-                            className={`flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                              selectedShipping === method.id
-                                ? "border-[#927194] bg-[#927194]/5"
-                                : "border-gray-200 dark:border-zinc-700 hover:border-[#927194]/50"
-                            }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <input
-                                type="radio"
-                                name="shipping"
-                                value={method.id}
-                                checked={selectedShipping === method.id}
-                                onChange={(e) =>
-                                  setSelectedShipping(e.target.value)
-                                }
-                                className="w-4 h-4 text-[#927194] focus:ring-[#927194]"
-                              />
-                              <div>
-                                <p className="font-semibold text-gray-900 dark:text-white">
-                                  {method.name}
-                                </p>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">
-                                  {method.description}
-                                </p>
-                              </div>
-                            </div>
-                            <p className="font-semibold text-gray-900 dark:text-white">
-                              {subtotal >= 50 && method.id === "standard"
-                                ? "FREE"
-                                : `$${method.price.toFixed(2)}`}
-                            </p>
-                          </label>
-                        ))}
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                          Shipping Method
+                        </h3>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Cart weight: {cartWeight.toFixed(2)} lb
+                        </p>
                       </div>
+
+                      {/* Free Shipping Notice */}
+                      {subtotal >= FREE_SHIPPING_THRESHOLD && (
+                        <div className="mb-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                          <p className="text-sm font-semibold text-green-700 dark:text-green-400 flex items-center gap-2">
+                            <Check size={16} />
+                            🎉 You qualify for free shipping!
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="space-y-3">
+                        {SHIPPING_METHODS.map((method) => {
+                          // Calculate actual shipping price based on weight and method
+                          let displayPrice = method.price;
+
+                          if (subtotal >= FREE_SHIPPING_THRESHOLD) {
+                            displayPrice = 0;
+                          } else if (method.id === "economy") {
+                            displayPrice = cartWeight >= 5 ? SHIPPING_TIERS.ECONOMY_5_70.cost : SHIPPING_TIERS.ECONOMY_0_5.cost;
+                          } else if (method.id === "standard") {
+                            displayPrice = cartWeight > 1 ? SHIPPING_TIERS.STANDARD_1_5.cost : SHIPPING_TIERS.STANDARD_0_1.cost;
+                          }
+
+                          return (
+                            <label
+                              key={method.id}
+                              className={`flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                                selectedShipping === method.id
+                                  ? "border-[#927194] bg-[#927194]/5"
+                                  : "border-gray-200 dark:border-zinc-700 hover:border-[#927194]/50"
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <input
+                                  type="radio"
+                                  name="shipping"
+                                  value={method.id}
+                                  checked={selectedShipping === method.id}
+                                  onChange={(e) =>
+                                    setSelectedShipping(e.target.value)
+                                  }
+                                  className="w-4 h-4 text-[#927194] focus:ring-[#927194]"
+                                />
+                                <div>
+                                  <p className="font-semibold text-gray-900 dark:text-white">
+                                    {method.name}
+                                  </p>
+                                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    {method.description}
+                                  </p>
+                                </div>
+                              </div>
+                              <p className="font-semibold text-gray-900 dark:text-white">
+                                {displayPrice === 0 ? "FREE" : `$${displayPrice.toFixed(2)}`}
+                              </p>
+                            </label>
+                          );
+                        })}
+                      </div>
+
+                      {/* Shopify Note */}
+                      <p className="mt-3 text-xs text-gray-500 dark:text-gray-400 italic">
+                        Note: Final shipping cost will be calculated by Shopify checkout based on your location and cart weight.
+                      </p>
                     </div>
                   </div>
 
@@ -579,7 +648,6 @@ export function CheckoutFlow() {
               tax={tax}
               total={total}
             />
-            <RewardsProgress currentTotal={subtotal} />
           </div>
         </div>
       </div>

@@ -10,6 +10,7 @@ import { useCartStore } from "@/lib/store/cart-store";
 import { useProductDetail } from "@/lib/hooks/use-product-detail";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { SizingGuide } from "@/components/products/sizing-guide";
+import { PRODUCT_WEIGHTS } from "@/lib/constants";
 import type { ProductVariant } from "@/lib/types";
 
 interface ProductDetailProps {
@@ -68,6 +69,36 @@ export function ProductDetail({ productId }: ProductDetailProps) {
   const handleAddToCart = () => {
     if (!selectedVariant) return;
 
+    // Determine product weight based on product type/title
+    const getProductWeight = (): number => {
+      const titleLower = product.title.toLowerCase();
+      const productTypeLower = product.productType?.toLowerCase() || "";
+
+      // Check for hoodies
+      if (titleLower.includes("hoodie") || productTypeLower.includes("hoodie")) {
+        return PRODUCT_WEIGHTS.HOODIE;
+      }
+
+      // Check for stickers
+      if (titleLower.includes("sticker") || productTypeLower.includes("sticker")) {
+        return PRODUCT_WEIGHTS.STICKER;
+      }
+
+      // Check for t-shirts (default for apparel)
+      if (
+        titleLower.includes("shirt") ||
+        titleLower.includes("tee") ||
+        titleLower.includes("t-shirt") ||
+        productTypeLower.includes("shirt") ||
+        productTypeLower.includes("apparel")
+      ) {
+        return PRODUCT_WEIGHTS.TSHIRT;
+      }
+
+      // Default weight for unknown items
+      return PRODUCT_WEIGHTS.DEFAULT;
+    };
+
     addItem({
       id: selectedVariant.id,
       productId: product.id,
@@ -80,6 +111,7 @@ export function ProductDetail({ productId }: ProductDetailProps) {
         id: selectedVariant.id,
         title: selectedVariant.title,
       },
+      weight: getProductWeight(),
     });
 
     setAdded(true);
@@ -270,7 +302,7 @@ export function ProductDetail({ productId }: ProductDetailProps) {
                 )}
               </Button>
               <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                Free shipping on orders over $50
+                Free shipping on orders over $75
               </p>
             </div>
 

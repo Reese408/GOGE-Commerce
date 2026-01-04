@@ -12,6 +12,7 @@ export interface CartItem {
     id: string;
     title: string;
   };
+  weight?: number; // Weight in pounds (for shipping calculations)
 }
 
 // ==================== Shopify Product Types ====================
