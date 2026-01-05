@@ -1,9 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { AddToCartButton } from "./add-to-cart-button";
+import { useCartStore } from "@/lib/store/cart-store";
+import { Loader2 } from "lucide-react";
 import type { ProductCardData } from "@/lib/types";
 
 interface ProductCardProps {
@@ -12,6 +15,10 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, featured = false }: ProductCardProps) {
+  const { items } = useCartStore();
+  const [hoveredVariantId, setHoveredVariantId] = useState<string | null>(null);
+  const [imageLoading, setImageLoading] = useState(true);
+
   const formattedPrice = new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: product.currencyCode,
@@ -24,12 +31,20 @@ export function ProductCard({ product, featured = false }: ProductCardProps) {
         {/* Product Image */}
         {product.imageUrl && (
           <div className="w-full lg:w-1/2 relative aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-zinc-800">
+            {imageLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-zinc-800">
+                <Loader2 className="w-8 h-8 text-gray-400 dark:text-zinc-600 animate-spin" />
+              </div>
+            )}
             <Image
               src={product.imageUrl}
               alt={product.title}
               fill
-              className="object-cover"
+              className={`object-cover transition-opacity duration-300 ${
+                imageLoading ? "opacity-0" : "opacity-100"
+              }`}
               sizes="(max-width: 1024px) 100vw, 50vw"
+              onLoad={() => setImageLoading(false)}
               priority
             />
           </div>
@@ -103,12 +118,20 @@ export function ProductCard({ product, featured = false }: ProductCardProps) {
         {/* Product Image */}
         {product.imageUrl && (
           <div className="relative aspect-[3/4] overflow-hidden bg-gray-100 dark:bg-zinc-800">
+            {imageLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-zinc-800 z-10">
+                <Loader2 className="w-8 h-8 text-gray-400 dark:text-zinc-600 animate-spin" />
+              </div>
+            )}
             <Image
               src={product.imageUrl}
               alt={product.title}
               fill
-              className="object-cover group-hover:scale-105 transition-transform duration-700"
+              className={`object-cover group-hover:scale-105 transition-all duration-700 ${
+                imageLoading ? "opacity-0" : "opacity-100"
+              }`}
               sizes="(max-width: 768px) 50vw, 25vw"
+              onLoad={() => setImageLoading(false)}
             />
 
             {!product.availableForSale && (
@@ -118,23 +141,37 @@ export function ProductCard({ product, featured = false }: ProductCardProps) {
             )}
 
             {/* Quick Add Overlay - Shows on Hover */}
-            <div className="absolute inset-x-0 bottom-0 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-sm p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-              <p className="text-xs text-gray-600 dark:text-gray-400 mb-2 text-center font-medium">
-                Quick Add
-              </p>
-              <div className="flex gap-1 justify-center">
-                {["XS", "S", "M", "L", "XL", "2XL"].map((size) => (
-                  <AddToCartButton
-                    key={size}
-                    product={{
-                      ...product,
-                      id: `${product.id}-${size}`,
-                    }}
-                    size={size}
-                  />
-                ))}
+            {product.variants && product.variants.length > 0 && (
+              <div className="absolute inset-x-0 bottom-0 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-sm p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                <p className="text-xs text-gray-600 dark:text-gray-400 mb-2 text-center font-medium">
+                  Quick Add
+                </p>
+                <div className="flex gap-1 justify-center flex-wrap">
+                  {product.variants.map((variant) => {
+                    const sizeOption = variant.selectedOptions.find(opt => opt.name === "Size");
+                    const size = sizeOption?.value || variant.title;
+                    const quantityAvailable = variant.quantityAvailable ?? 0;
+                    const isAvailable = variant.availableForSale && quantityAvailable > 0;
+
+                    return (
+                      <AddToCartButton
+                        key={variant.id}
+                        product={{
+                          id: variant.id,
+                          title: product.title,
+                          price: parseFloat(variant.price.amount),
+                          currencyCode: variant.price.currencyCode,
+                          imageUrl: product.imageUrl,
+                        }}
+                        size={size}
+                        disabled={!isAvailable}
+                        variant={variant}
+                      />
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
 

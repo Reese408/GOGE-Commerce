@@ -16,6 +16,8 @@ async function fetchProducts(count: number = 10): Promise<ProductCardData[]> {
     const price = parseFloat(product.priceRange.minVariantPrice.amount);
     // Get the first variant ID (default variant) for checkout
     const variantId = product.variants?.edges[0]?.node?.id || product.id;
+    // Map variants
+    const variants = product.variants?.edges.map(({ node }) => node) || [];
 
     return {
       id: variantId, // Use variant ID instead of product ID for Shopify checkout
@@ -26,6 +28,7 @@ async function fetchProducts(count: number = 10): Promise<ProductCardData[]> {
       currencyCode: product.priceRange.minVariantPrice.currencyCode,
       imageUrl: image?.url,
       availableForSale: product.availableForSale,
+      variants: variants,
     };
   });
 }

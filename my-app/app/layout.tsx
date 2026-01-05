@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 import { MainLayout } from "@/components/layout-page/main-layout";
 import { usePathname } from "next/navigation";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,6 +37,15 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {isCheckoutPage ? children : <MainLayout>{children}</MainLayout>}
+          <Toaster
+            position="top-center"
+            richColors
+            expand={false}
+            visibleToasts={9}
+            closeButton
+            offset="16px"
+            gap={8}
+          />
         </ThemeProvider>
       </body>
     </html>

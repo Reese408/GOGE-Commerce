@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { CartItem as CartItemType } from "../types";
+import { toast } from "sonner";
 
 export type CartItem = CartItemType;
 
@@ -9,6 +10,7 @@ interface CartStore {
   items: CartItem[];
   isOpen: boolean;
   recentlyRemoved: CartItem | null;
+  removedItems: Array<{ item: CartItem; timestamp: number }>;
 
   // Actions
   addItem: (item: Omit<CartItem, "quantity"> & { quantity?: number }) => void;
@@ -19,7 +21,9 @@ interface CartStore {
   openCart: () => void;
   closeCart: () => void;
   undoRemove: () => void;
+  undoRemoveById: (timestamp: number) => void;
   clearRecentlyRemoved: () => void;
+  dismissRemovedItem: (timestamp: number) => void;
 
   // Computed values
   totalItems: () => number;
@@ -36,23 +40,40 @@ export const useCartStore = create<CartStore>()(
       items: [],
       isOpen: false,
       recentlyRemoved: null,
+      removedItems: [],
 
       addItem: (item) => {
         const existingItem = get().items.find((i) => i.id === item.id);
+        const quantityAvailable = item.quantityAvailable;
 
         if (existingItem) {
+          // Check if we can add more of this item
+          const newQuantity = existingItem.quantity + (item.quantity || 1);
+
+          if (quantityAvailable && newQuantity > quantityAvailable) {
+            toast.error(`Only ${quantityAvailable} available in stock`);
+            return;
+          }
+
           // Update quantity if item already exists
           set({
             items: get().items.map((i) =>
               i.id === item.id
-                ? { ...i, quantity: i.quantity + (item.quantity || 1) }
+                ? { ...i, quantity: newQuantity, quantityAvailable: item.quantityAvailable }
                 : i
             ),
           });
         } else {
+          // Check if quantity requested is available
+          const requestedQuantity = item.quantity || 1;
+          if (quantityAvailable && requestedQuantity > quantityAvailable) {
+            toast.error(`Only ${quantityAvailable} available in stock`);
+            return;
+          }
+
           // Add new item
           set({
-            items: [...get().items, { ...item, quantity: item.quantity || 1 }],
+            items: [...get().items, { ...item, quantity: requestedQuantity }],
           });
         }
       },
@@ -60,9 +81,11 @@ export const useCartStore = create<CartStore>()(
       removeItem: (id) => {
         const itemToRemove = get().items.find((item) => item.id === id);
         if (itemToRemove) {
+          const timestamp = Date.now();
           set({
             items: get().items.filter((item) => item.id !== id),
             recentlyRemoved: itemToRemove,
+            removedItems: [...get().removedItems, { item: itemToRemove, timestamp }],
           });
         }
       },
@@ -77,14 +100,37 @@ export const useCartStore = create<CartStore>()(
         }
       },
 
+      undoRemoveById: (timestamp) => {
+        const removedEntry = get().removedItems.find((r) => r.timestamp === timestamp);
+        if (removedEntry) {
+          set({
+            items: [...get().items, removedEntry.item],
+            removedItems: get().removedItems.filter((r) => r.timestamp !== timestamp),
+          });
+        }
+      },
+
       clearRecentlyRemoved: () => {
         set({ recentlyRemoved: null });
+      },
+
+      dismissRemovedItem: (timestamp) => {
+        set({
+          removedItems: get().removedItems.filter((r) => r.timestamp !== timestamp),
+        });
       },
 
       updateQuantity: (id, quantity) => {
         if (quantity <= 0) {
           get().removeItem(id);
         } else {
+          // Check if quantity is available
+          const item = get().items.find((i) => i.id === id);
+          if (item?.quantityAvailable && quantity > item.quantityAvailable) {
+            toast.error(`Only ${item.quantityAvailable} available in stock`);
+            return;
+          }
+
           set({
             items: get().items.map((item) =>
               item.id === id ? { ...item, quantity } : item

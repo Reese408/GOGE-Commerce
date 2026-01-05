@@ -8,7 +8,6 @@ interface OrderSummaryProps {
   items: CartItem[];
   subtotal: number;
   shipping: number;
-  tax: number;
   total: number;
 }
 
@@ -16,7 +15,6 @@ export function OrderSummary({
   items,
   subtotal,
   shipping,
-  tax,
   total,
 }: OrderSummaryProps) {
   return (
@@ -88,12 +86,9 @@ export function OrderSummary({
             {shipping === 0 ? "FREE" : `$${shipping.toFixed(2)}`}
           </span>
         </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-gray-600 dark:text-gray-400">Tax</span>
-          <span className="font-medium text-gray-900 dark:text-white">
-            ${tax.toFixed(2)}
-          </span>
-        </div>
+        <p className="text-xs text-gray-500 dark:text-gray-400 italic pt-2">
+          Taxes will be calculated by Shopify at checkout
+        </p>
       </div>
 
       {/* Total */}

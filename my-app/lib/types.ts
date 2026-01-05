@@ -13,6 +13,7 @@ export interface CartItem {
     title: string;
   };
   weight?: number; // Weight in pounds (for shipping calculations)
+  quantityAvailable?: number; // Available inventory quantity
 }
 
 // ==================== Shopify Product Types ====================
@@ -48,9 +49,7 @@ export interface ShopifyProduct {
   };
   variants?: {
     edges: Array<{
-      node: {
-        id: string;
-      };
+      node: ProductVariant;
     }>;
   };
   availableForSale: boolean;
@@ -88,6 +87,7 @@ export interface ProductCardData {
   currencyCode: string;
   imageUrl?: string;
   availableForSale: boolean;
+  variants?: ProductVariant[];
 }
 
 export interface AddToCartProductData {
@@ -137,6 +137,7 @@ export interface ProductVariant {
   id: string;
   title: string;
   availableForSale: boolean;
+  quantityAvailable?: number;
   price: {
     amount: string;
     currencyCode: string;

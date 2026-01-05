@@ -62,10 +62,21 @@ export const ALL_PRODUCTS_QUERY = `
               }
             }
           }
-          variants(first: 1) {
+          variants(first: 20) {
             edges {
               node {
                 id
+                title
+                availableForSale
+                quantityAvailable
+                price {
+                  amount
+                  currencyCode
+                }
+                selectedOptions {
+                  name
+                  value
+                }
               }
             }
           }
@@ -181,6 +192,7 @@ export const PRODUCT_BY_HANDLE_QUERY = `
             id
             title
             availableForSale
+            quantityAvailable
             price {
               amount
               currencyCode
@@ -231,6 +243,7 @@ export const PRODUCT_BY_ID_QUERY = `
             id
             title
             availableForSale
+            quantityAvailable
             price {
               amount
               currencyCode

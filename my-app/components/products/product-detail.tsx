@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { ChevronLeft, Check, Ruler } from "lucide-react";
+import { ChevronLeft, Check, Ruler, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/lib/store/cart-store";
@@ -11,6 +11,7 @@ import { useProductDetail } from "@/lib/hooks/use-product-detail";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { SizingGuide } from "@/components/products/sizing-guide";
 import { PRODUCT_WEIGHTS } from "@/lib/constants";
+import { toast } from "sonner";
 import type { ProductVariant } from "@/lib/types";
 
 interface ProductDetailProps {
@@ -19,7 +20,7 @@ interface ProductDetailProps {
 
 export function ProductDetail({ productId }: ProductDetailProps) {
   const router = useRouter();
-  const { addItem, openCart } = useCartStore();
+  const { addItem, openCart, items } = useCartStore();
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [imageLoading, setImageLoading] = useState(true);
@@ -69,18 +70,24 @@ export function ProductDetail({ productId }: ProductDetailProps) {
   const handleAddToCart = () => {
     if (!selectedVariant) return;
 
-    // Determine product weight based on product type/title
+    // Check if variant is available for sale and has stock
+    const quantityAvailable = selectedVariant.quantityAvailable ?? 0;
+    if (!selectedVariant.availableForSale || quantityAvailable <= 0) {
+      toast.error("This item is out of stock");
+      return;
+    }
+
+    // Determine product weight based on product title
     const getProductWeight = (): number => {
       const titleLower = product.title.toLowerCase();
-      const productTypeLower = product.productType?.toLowerCase() || "";
 
       // Check for hoodies
-      if (titleLower.includes("hoodie") || productTypeLower.includes("hoodie")) {
+      if (titleLower.includes("hoodie")) {
         return PRODUCT_WEIGHTS.HOODIE;
       }
 
       // Check for stickers
-      if (titleLower.includes("sticker") || productTypeLower.includes("sticker")) {
+      if (titleLower.includes("sticker")) {
         return PRODUCT_WEIGHTS.STICKER;
       }
 
@@ -88,9 +95,7 @@ export function ProductDetail({ productId }: ProductDetailProps) {
       if (
         titleLower.includes("shirt") ||
         titleLower.includes("tee") ||
-        titleLower.includes("t-shirt") ||
-        productTypeLower.includes("shirt") ||
-        productTypeLower.includes("apparel")
+        titleLower.includes("t-shirt")
       ) {
         return PRODUCT_WEIGHTS.TSHIRT;
       }
@@ -112,6 +117,7 @@ export function ProductDetail({ productId }: ProductDetailProps) {
         title: selectedVariant.title,
       },
       weight: getProductWeight(),
+      quantityAvailable: selectedVariant.quantityAvailable,
     });
 
     setAdded(true);
@@ -239,6 +245,48 @@ export function ProductDetail({ productId }: ProductDetailProps) {
                     Size Guide
                   </button>
                 </div>
+
+                {/* Stock Progress Bar - Shows for selected variant */}
+                {selectedVariant && (() => {
+                  const quantityAvailable = selectedVariant.quantityAvailable ?? 0;
+                  const maxStock = 20;
+                  const percentageAvailable = Math.min((quantityAvailable / maxStock) * 100, 100);
+
+                  return (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="space-y-2 p-3 bg-gray-50 dark:bg-zinc-800 rounded-lg"
+                    >
+                      <div className="flex justify-between text-sm">
+                        <span className="font-medium text-gray-900 dark:text-white">
+                          Only {quantityAvailable} left!
+                        </span>
+                        <span className="text-gray-500 dark:text-gray-400">
+                          {quantityAvailable}/{maxStock}
+                        </span>
+                      </div>
+                      <div className="w-full h-2.5 bg-gray-200 dark:bg-zinc-700 rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${percentageAvailable}%` }}
+                          transition={{ duration: 0.5, ease: "easeOut" }}
+                          className={`h-full rounded-full ${
+                            percentageAvailable === 0
+                              ? "bg-red-500"
+                              : percentageAvailable <= 25
+                              ? "bg-orange-500"
+                              : percentageAvailable <= 50
+                              ? "bg-yellow-500"
+                              : "bg-green-500"
+                          }`}
+                        />
+                      </div>
+                    </motion.div>
+                  );
+                })()}
+
                 <div className="grid grid-cols-4 gap-3">
                   {sizeOptions.map((size) => {
                     const variant = variants.find((v) => {
@@ -247,28 +295,43 @@ export function ProductDetail({ productId }: ProductDetailProps) {
                     });
 
                     const isSelected = selectedVariant?.id === variant?.id;
-                    const isAvailable = variant?.availableForSale || false;
+                    const quantityAvailable = variant?.quantityAvailable ?? 0;
+                    const isAvailable = variant?.availableForSale && quantityAvailable > 0;
+
+                    // Check if user has all available stock in cart
+                    const itemInCart = items.find((item) => item.id === variant?.id);
+                    const quantityInCart = itemInCart?.quantity ?? 0;
+                    const allStockInCart = quantityAvailable > 0 && quantityInCart >= quantityAvailable;
+
+                    const isDisabled = !isAvailable || allStockInCart;
 
                     return (
                       <motion.button
                         key={size}
-                        whileHover={isAvailable ? { scale: 1.05 } : {}}
-                        whileTap={isAvailable ? { scale: 0.95 } : {}}
-                        onClick={() => variant && setSelectedVariant(variant)}
-                        disabled={!isAvailable}
+                        whileHover={!isDisabled ? { scale: 1.05 } : {}}
+                        whileTap={!isDisabled ? { scale: 0.95 } : {}}
+                        onClick={() => variant && !isDisabled && setSelectedVariant(variant)}
+                        disabled={isDisabled}
                         className={`relative py-3 px-4 rounded-lg border-2 font-semibold transition-all ${
                           isSelected
                             ? "border-[#927194] bg-[#927194]/10 text-[#927194] dark:border-[#D08F90] dark:bg-[#D08F90]/10 dark:text-[#D08F90]"
-                            : isAvailable
+                            : !isDisabled
                             ? "border-gray-300 dark:border-zinc-700 hover:border-[#927194] dark:hover:border-[#D08F90] text-gray-900 dark:text-white"
-                            : "border-gray-200 dark:border-zinc-800 text-gray-400 dark:text-zinc-600 cursor-not-allowed line-through"
+                            : "border-gray-200 dark:border-zinc-800 text-gray-400 dark:text-zinc-600 cursor-not-allowed opacity-40"
                         }`}
                       >
-                        {size}
-                        {isSelected && (
+                        <span className="block">{size}</span>
+                        {isSelected && !isDisabled && (
                           <Check
                             size={16}
                             className="absolute top-1 right-1 text-[#927194] dark:text-[#D08F90]"
+                          />
+                        )}
+                        {isDisabled && (
+                          <X
+                            size={20}
+                            className="absolute inset-0 m-auto text-gray-400 dark:text-zinc-600"
+                            strokeWidth={3}
                           />
                         )}
                       </motion.button>

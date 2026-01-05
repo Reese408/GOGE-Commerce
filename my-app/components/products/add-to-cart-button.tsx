@@ -5,32 +5,68 @@ import { ShoppingCart, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/lib/store/cart-store";
 import { motion } from "framer-motion";
-import type { AddToCartProductData } from "@/lib/types";
+import { PRODUCT_WEIGHTS } from "@/lib/constants";
+import type { AddToCartProductData, ProductVariant } from "@/lib/types";
 
 interface AddToCartButtonProps {
   product: AddToCartProductData;
   size?: string;
+  disabled?: boolean;
+  variant?: ProductVariant;
 }
 
-export function AddToCartButton({ product, size }: AddToCartButtonProps) {
-  const { addItem, openCart } = useCartStore();
+export function AddToCartButton({ product, size, disabled = false, variant }: AddToCartButtonProps) {
+  const { addItem, openCart, items } = useCartStore();
   const [added, setAdded] = useState(false);
+
+  // Check if user already has all available stock in cart
+  const itemInCart = items.find((item) => item.id === product.id);
+  const quantityInCart = itemInCart?.quantity ?? 0;
+  const quantityAvailable = variant?.quantityAvailable ?? 0;
+  const allStockInCart = quantityAvailable > 0 && quantityInCart >= quantityAvailable;
+
+  // Determine product weight based on product title
+  const getProductWeight = (): number => {
+    const titleLower = product.title.toLowerCase();
+
+    if (titleLower.includes("hoodie")) {
+      return PRODUCT_WEIGHTS.HOODIE;
+    }
+    if (titleLower.includes("sticker")) {
+      return PRODUCT_WEIGHTS.STICKER;
+    }
+    if (
+      titleLower.includes("shirt") ||
+      titleLower.includes("tee") ||
+      titleLower.includes("t-shirt")
+    ) {
+      return PRODUCT_WEIGHTS.TSHIRT;
+    }
+    return PRODUCT_WEIGHTS.DEFAULT;
+  };
 
   const handleAddToCart = (e?: React.MouseEvent) => {
     e?.preventDefault();
     e?.stopPropagation();
 
+    if (disabled || allStockInCart) return;
+
     addItem({
-      id: product.id,
+      id: product.id, // This is the variant ID
       productId: product.id,
       title: product.title,
       price: product.price,
       currencyCode: product.currencyCode,
       imageUrl: product.imageUrl,
-      variant: size ? {
-        id: `${product.id}-${size}`,
+      variant: variant ? {
+        id: variant.id,
+        title: size || variant.title,
+      } : size ? {
+        id: product.id,
         title: size,
       } : undefined,
+      weight: getProductWeight(),
+      quantityAvailable: variant?.quantityAvailable,
     });
 
     // Show success feedback
@@ -43,10 +79,18 @@ export function AddToCartButton({ product, size }: AddToCartButtonProps) {
 
   // If size is provided, render as a compact size button
   if (size) {
+    const isDisabled = disabled || allStockInCart;
+
     return (
       <button
         onClick={handleAddToCart}
-        className="w-10 h-10 bg-[#927194]/30 hover:bg-[#927194]/50 text-gray-900 dark:text-white border border-[#927194]/40 rounded-md text-xs font-semibold transition-all duration-200 hover:scale-110"
+        disabled={isDisabled}
+        className={`w-10 h-10 border rounded-md text-xs font-semibold transition-all duration-200 ${
+          isDisabled
+            ? "bg-gray-200 dark:bg-zinc-800 text-gray-400 dark:text-zinc-600 border-gray-300 dark:border-zinc-700 cursor-not-allowed opacity-40"
+            : "bg-[#927194]/30 hover:bg-[#927194]/50 text-gray-900 dark:text-white border-[#927194]/40 hover:scale-110"
+        }`}
+        title={allStockInCart ? "All available stock in cart" : disabled ? "Out of stock" : ""}
       >
         {size}
       </button>
