@@ -488,7 +488,7 @@ function SearchDropdownContent({ placeholder = "Search products..." }: SearchDro
       )}
 
       {/* Search Dropdown - Desktop only, full-width design */}
-      {showDropdown && debouncedQuery && (
+      {isFocused && (
         <div
           ref={dropdownRef}
           className="hidden lg:block fixed left-0 right-0 top-[80px] md:top-18 z-60 animate-in fade-in slide-in-from-top-2 duration-200"
@@ -496,15 +496,51 @@ function SearchDropdownContent({ placeholder = "Search products..." }: SearchDro
           <div className="bg-white dark:bg-zinc-900 shadow-2xl border-t border-gray-200 dark:border-zinc-800" style={{ maxHeight: 'calc(100vh - 80px)', overflowY: 'auto' }}>
             <div className="container mx-auto px-4 md:px-6 py-6 md:py-8 max-w-6xl">
 
-              {/* Loading State */}
-              {(isLoadingProducts || isLoadingCollections) && (
-                <div className="flex items-center justify-center py-20">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#927194] dark:border-[#D08F90]"></div>
+              {/* Show suggested searches when no query */}
+              {debouncedQuery.length === 0 ? (
+                <div>
+                  <div className="flex items-center gap-2 mb-6">
+                    <TrendingUp size={20} className="text-[#927194] dark:text-[#D08F90]" />
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                      Popular Searches
+                    </h3>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {SUGGESTED_SEARCHES.map((searchTerm) => (
+                      <button
+                        key={searchTerm}
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setQuery(searchTerm);
+                          setDebouncedQuery(searchTerm);
+                        }}
+                        onMouseDown={(e) => {
+                          e.preventDefault(); // Prevent input blur
+                          e.stopPropagation();
+                        }}
+                        className="px-6 py-4 rounded-xl bg-gradient-to-br from-[#927194]/10 to-[#D08F90]/10 hover:from-[#927194]/20 hover:to-[#D08F90]/20 transition-all text-left border border-[#927194]/20 hover:border-[#927194]/40"
+                      >
+                        <div className="flex items-center gap-2 text-gray-900 dark:text-white font-medium">
+                          <Search size={16} className="text-[#927194] dark:text-[#D08F90]" />
+                          {searchTerm}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              )}
+              ) : (
+                <>
+                  {/* Loading State */}
+                  {(isLoadingProducts || isLoadingCollections) && (
+                    <div className="flex items-center justify-center py-20">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#927194] dark:border-[#D08F90]"></div>
+                    </div>
+                  )}
 
-              {/* Search Results */}
-              {!isLoadingProducts && !isLoadingCollections && hasResults && (
+                  {/* Search Results */}
+                  {!isLoadingProducts && !isLoadingCollections && hasResults && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
                   {/* Products Column */}
                   {products.length > 0 && (
@@ -602,21 +638,23 @@ function SearchDropdownContent({ placeholder = "Search products..." }: SearchDro
                 </div>
               )}
 
-              {/* No Results */}
-              {!isLoadingProducts && !isLoadingCollections && !hasResults && (
-                <div className="flex flex-col items-center justify-center py-20 text-center">
-                  <Search size={64} className="text-gray-300 dark:text-zinc-700 mb-6" />
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                    No results found
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-8">
-                    We couldn't find anything matching "{debouncedQuery}"
-                  </p>
-                  <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                    <Lightbulb size={16} />
-                    <span>Try searching with different keywords</span>
-                  </div>
-                </div>
+                  {/* No Results */}
+                  {!isLoadingProducts && !isLoadingCollections && !hasResults && (
+                    <div className="flex flex-col items-center justify-center py-20 text-center">
+                      <Search size={64} className="text-gray-300 dark:text-zinc-700 mb-6" />
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                        No results found
+                      </h3>
+                      <p className="text-gray-600 dark:text-gray-400 mb-8">
+                        We couldn't find anything matching "{debouncedQuery}"
+                      </p>
+                      <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                        <Lightbulb size={16} />
+                        <span>Try searching with different keywords</span>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
