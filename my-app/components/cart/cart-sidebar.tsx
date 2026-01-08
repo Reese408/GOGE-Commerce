@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Plus, Minus, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
@@ -11,8 +11,9 @@ import { useCartStore } from "@/lib/store/cart-store";
 import { UndoToast } from "@/components/cart/undo-toast";
 import { FreeShippingProgress } from "@/components/cart/free-shipping-progress";
 import { useProducts } from "@/lib/hooks/use-products";
+import { CartErrorBoundary } from "@/components/error-boundary";
 
-export function CartSidebar() {
+function CartSidebarContent() {
   const router = useRouter();
   const { items, isOpen, closeCart, updateQuantity, removeItem, totalPrice } =
     useCartStore();
@@ -23,11 +24,27 @@ export function CartSidebar() {
   // Fetch products for "You May Also Like" section
   const { data: allProducts } = useProducts(8);
 
-  // Get random 4 products that are not in cart
-  const suggestedProducts = allProducts
-    ?.filter(product => !items.some(item => item.id === product.id))
-    .sort(() => Math.random() - 0.5)
-    .slice(0, 4) || [];
+  // Memoize suggested products - only recalculate when items or allProducts change
+  // Use stable seed for random sorting instead of Math.random()
+  const suggestedProducts = useMemo(() => {
+    if (!allProducts) return [];
+
+    const availableProducts = allProducts.filter(
+      product => !items.some(item => item.id === product.id)
+    );
+
+    // Fisher-Yates shuffle with stable seed based on cart items count
+    const shuffled = [...availableProducts];
+    const seed = items.length; // Stable seed
+
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      // Pseudo-random based on seed
+      const j = Math.floor(((seed * (i + 1)) % shuffled.length));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
+    return shuffled.slice(0, 4);
+  }, [allProducts, items]);
 
   const total = totalPrice();
 
@@ -48,14 +65,14 @@ export function CartSidebar() {
     }
   }, [isOpen]);
 
-  const handleImageLoad = (itemId: string) => {
+  const handleImageLoad = useCallback((itemId: string) => {
     setLoadingImages((prev) => ({ ...prev, [itemId]: false }));
-  };
+  }, []);
 
-  const handleCheckout = () => {
+  const handleCheckout = useCallback(() => {
     closeCart();
     router.push("/checkout");
-  };
+  }, [closeCart, router]);
 
   return (
     <AnimatePresence>
@@ -70,13 +87,13 @@ export function CartSidebar() {
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
           />
 
-          {/* Cart Modal - Bottom slide-up on mobile (Gymshark style), sidebar on desktop */}
+          {/* Cart Modal - Slide up from bottom on mobile (with top gap), sidebar on desktop */}
           <motion.div
-            initial={{ y: "100%", x: 0 }}
-            animate={{ y: 0, x: 0 }}
-            exit={{ y: "100%", x: 0 }}
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 md:right-0 md:left-auto md:top-0 md:bottom-auto h-[90vh] md:h-full w-full md:w-[450px] bg-white dark:bg-zinc-900 shadow-2xl z-50 flex flex-col rounded-t-3xl md:rounded-none"
+            className="fixed bottom-0 left-0 right-0 top-16 md:top-0 md:right-0 md:left-auto md:bottom-0 w-full md:w-112.5 bg-white dark:bg-zinc-900 shadow-2xl z-50 flex flex-col rounded-t-2xl md:rounded-none"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-zinc-800">
@@ -303,12 +320,21 @@ export function CartSidebar() {
                 </Button>
               </div>
             )}
+
+            {/* Undo Toast - Inside cart sidebar */}
+            <UndoToast />
           </motion.div>
         </>
       )}
-
-      {/* Undo Toast - Outside AnimatePresence to persist */}
-      <UndoToast />
     </AnimatePresence>
+  );
+}
+
+// Wrap with error boundary
+export function CartSidebar() {
+  return (
+    <CartErrorBoundary>
+      <CartSidebarContent />
+    </CartErrorBoundary>
   );
 }

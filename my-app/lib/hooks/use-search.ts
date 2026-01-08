@@ -3,28 +3,69 @@
 import { useQuery } from "@tanstack/react-query";
 import { SEARCH_PRODUCTS_QUERY, SEARCH_COLLECTIONS_QUERY } from "@/lib/queries";
 import { ShopifyProduct, ShopifyCollection } from "@/lib/types";
+import Fuse from "fuse.js";
+import { validateSearchQuery } from "@/lib/utils/input-validation";
 
 const SHOPIFY_DOMAIN = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
 const SHOPIFY_ACCESS_TOKEN = process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_TOKEN;
 
+// Fuzzy matching utility for typos and spelling mistakes
+function fuzzyMatchScore(searchTerm: string, target: string): number {
+  const s = searchTerm.toLowerCase();
+  const t = target.toLowerCase();
+
+  // Exact match
+  if (t.includes(s)) return 100;
+
+  // Check if removing/adding 's' helps (shirt vs shirts)
+  if (t.includes(s + 's') || t.includes(s.slice(0, -1))) return 95;
+
+  // Levenshtein-like simple distance check
+  const fuse = new Fuse([target], {
+    threshold: 0.4, // Allow up to 40% difference
+    distance: 100,
+    includeScore: true,
+  });
+
+  const result = fuse.search(searchTerm);
+  if (result.length > 0 && result[0].score) {
+    return Math.round((1 - result[0].score) * 100);
+  }
+
+  return 0;
+}
+
 async function searchProducts(query: string, first: number = 50) {
-  // Smart search: Try multiple search strategies for better results
-  // 1. Search in title with wildcards
-  // 2. Search in product_type (category) - exact and partial matches
-  // 3. Search in tags
-  // 4. Search in vendor
+  // Validate and sanitize query to prevent GraphQL injection
+  const validatedQuery = validateSearchQuery(query);
 
-  const cleanQuery = query.trim();
-  const words = cleanQuery.split(/\s+/); // Split into words for multi-word searches
+  if (!validatedQuery) {
+    // Return empty results for invalid queries
+    return [];
+  }
 
-  // Build a comprehensive search query that checks multiple fields
-  // For "shirt" it will find products with:
-  // - "shirt" in title (e.g., "Signature Logo Shirt")
-  // - product_type = "Shirts" (category)
-  // - "shirt" in tags
-  const searchParts = words.map(word =>
-    `(title:*${word}* OR product_type:*${word}* OR tag:*${word}* OR vendor:*${word}*)`
-  ).join(' AND ');
+  // Build search with wildcards for partial matching
+  const words = validatedQuery.split(/\s+/);
+
+  // More aggressive wildcard search - catches more variations
+  const searchParts = words.map(word => {
+    // For each word, try multiple variations to catch typos
+    const baseWord = word.toLowerCase();
+    const variations = [
+      `*${baseWord}*`,     // Contains anywhere
+      `${baseWord}*`,      // Starts with
+      `*${baseWord}`,      // Ends with
+    ];
+
+    // Also try plural/singular
+    const withoutS = baseWord.endsWith('s') ? baseWord.slice(0, -1) : null;
+    const withS = !baseWord.endsWith('s') ? `${baseWord}s` : null;
+
+    if (withoutS) variations.push(`*${withoutS}*`);
+    if (withS) variations.push(`*${withS}*`);
+
+    return `(title:${variations.join(' OR title:')} OR product_type:${variations.join(' OR product_type:')} OR tag:${variations.join(' OR tag:')})`;
+  }).join(' AND ');
 
   const searchQuery = searchParts;
 
@@ -53,7 +94,7 @@ async function searchProducts(query: string, first: number = 50) {
   // 3. Title contains query
   // 4. Everything else
   return products.sort((a: ShopifyProduct, b: ShopifyProduct) => {
-    const queryLower = cleanQuery.toLowerCase();
+    const queryLower = validatedQuery.toLowerCase();
     const aTitle = a.title.toLowerCase();
     const bTitle = b.title.toLowerCase();
     const aType = (a.productType || '').toLowerCase();
@@ -86,8 +127,15 @@ async function searchProducts(query: string, first: number = 50) {
 }
 
 async function searchCollections(query: string, first: number = 3) {
+  // Validate and sanitize query to prevent GraphQL injection
+  const validatedQuery = validateSearchQuery(query);
+
+  if (!validatedQuery) {
+    return [];
+  }
+
   // Format query for Shopify search - add wildcards for partial matching
-  const searchQuery = `title:*${query}*`;
+  const searchQuery = `title:*${validatedQuery}*`;
 
   const response = await fetch(`https://${SHOPIFY_DOMAIN}/api/2025-01/graphql.json`, {
     method: "POST",

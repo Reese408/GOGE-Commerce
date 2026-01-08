@@ -180,13 +180,10 @@ export function CheckoutFlow() {
         checkoutUrl.searchParams.set("checkout[shipping_address][phone]", shippingData.phone);
       }
 
-      console.log("Redirecting to Shopify checkout with pre-filled info:", checkoutUrl.toString());
-      console.log("Cart items:", cartItems);
-
       // Redirect to Shopify cart/checkout with pre-filled data
       window.location.href = checkoutUrl.toString();
     } catch (error) {
-      console.error("Checkout error:", error);
+      // TODO: Replace alert with toast notification
       alert("There was an error creating your checkout. Please try again.");
       setIsProcessing(false);
     }

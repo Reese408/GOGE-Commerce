@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Search, X, Lightbulb, Package, Folder, TrendingUp } from "lucide-react";
 import Image from "next/image";
@@ -9,6 +9,7 @@ import { useSearch } from "@/lib/hooks/use-search";
 import { useQuery } from "@tanstack/react-query";
 import { ShopifyProduct, ShopifyCollection } from "@/lib/types";
 import { ALL_PRODUCTS_QUERY } from "@/lib/queries";
+import { SearchErrorBoundary } from "@/components/error-boundary";
 
 const SHOPIFY_DOMAIN = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
 const SHOPIFY_ACCESS_TOKEN = process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_TOKEN;
@@ -48,7 +49,21 @@ const SUGGESTED_SEARCHES = [
   "All Products",
 ];
 
-export function SearchDropdown({ placeholder = "Search products..." }: SearchDropdownProps) {
+// Common product keywords for autocomplete
+const AUTOCOMPLETE_KEYWORDS = [
+  "shirt", "shirts", "t-shirt", "tee",
+  "hoodie", "hoodies", "sweatshirt",
+  "pants", "jeans", "trousers",
+  "shoes", "sneakers", "boots",
+  "jacket", "coat", "blazer",
+  "dress", "skirt",
+  "hat", "cap", "beanie",
+  "bag", "backpack", "purse",
+  "socks", "accessories",
+  "shorts", "swimwear",
+];
+
+function SearchDropdownContent({ placeholder = "Search products..." }: SearchDropdownProps) {
   const [query, setQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -72,7 +87,7 @@ export function SearchDropdown({ placeholder = "Search products..." }: SearchDro
   );
 
   // Fetch all products for suggestions when no results
-  const { data: allProductsData, isLoading: isLoadingAll, error: allError } = useQuery({
+  const { data: allProductsData, isLoading: isLoadingAll } = useQuery({
     queryKey: ["all-products-suggestions"],
     queryFn: async () => {
       const response = await fetch(`https://${SHOPIFY_DOMAIN}/api/2025-01/graphql.json`, {
@@ -88,16 +103,13 @@ export function SearchDropdown({ placeholder = "Search products..." }: SearchDro
       });
 
       if (!response.ok) {
-        console.error("Failed to fetch products:", response.status);
-        throw new Error("Failed to fetch products");
+        throw new Error(`Failed to fetch products: ${response.status}`);
       }
 
       const result = await response.json();
-      console.log("All products result:", result);
 
       if (!result.data || !result.data.products) {
-        console.error("Invalid response structure:", result);
-        return [];
+        throw new Error("Invalid response structure");
       }
 
       return result.data.products.edges.map((edge: { node: ShopifyProduct }) => edge.node);
@@ -105,37 +117,75 @@ export function SearchDropdown({ placeholder = "Search products..." }: SearchDro
     staleTime: 1000 * 60 * 10, // 10 minutes
   });
 
-  // Calculate similar products
-  const similarProducts = query.length > 0 && products.length === 0 && allProductsData
-    ? allProductsData
-        .map((product: ShopifyProduct) => ({
-          product,
-          score: Math.max(
-            calculateSimilarity(product.title, query),
-            product.productType ? calculateSimilarity(product.productType, query) : 0,
-            calculateSimilarity(product.description, query)
-          ),
-        }))
-        .filter(({ score }: { score: number }) => score > 0)
-        .sort((a: { score: number }, b: { score: number }) => b.score - a.score)
-        .slice(0, 5)
-        .map(({ product }: { product: ShopifyProduct }) => product)
-    : [];
+  // Memoize autocomplete suggestions - only recalculate when dependencies change
+  const autocompleteOptions = useMemo(() => {
+    if (query.length < 2 || query.length >= debouncedQuery.length + 2) {
+      return [];
+    }
 
-  const handleClear = () => {
+    const queryLower = query.toLowerCase();
+
+    // Get matching keywords from our list
+    const keywordMatches = AUTOCOMPLETE_KEYWORDS
+      .filter(keyword => keyword.startsWith(queryLower) && keyword !== queryLower)
+      .slice(0, 5);
+
+    // Get matching product titles and types from all products
+    const productMatches = allProductsData
+      ? allProductsData
+          .flatMap((product: ShopifyProduct) => {
+            const matches = [];
+            const title = product.title.toLowerCase();
+            const type = (product.productType || '').toLowerCase();
+
+            if (title.includes(queryLower)) matches.push(product.title);
+            if (type.includes(queryLower) && type !== title) matches.push(product.productType);
+
+            return matches;
+          })
+          .filter(Boolean)
+          .slice(0, 3)
+      : [];
+
+    // Combine and deduplicate
+    return [...new Set([...keywordMatches, ...productMatches])].slice(0, 5);
+  }, [query, debouncedQuery, allProductsData]);
+
+  // Memoize similar products for fuzzy matching - expensive calculation
+  const similarProducts = useMemo(() => {
+    if (debouncedQuery.length === 0 || products.length > 0 || !allProductsData) {
+      return [];
+    }
+
+    return allProductsData
+      .map((product: ShopifyProduct) => ({
+        product,
+        score: Math.max(
+          calculateSimilarity(product.title, debouncedQuery),
+          product.productType ? calculateSimilarity(product.productType, debouncedQuery) : 0,
+          calculateSimilarity(product.description, debouncedQuery)
+        ),
+      }))
+      .filter(({ score }: { score: number }) => score > 0)
+      .sort((a: { score: number }, b: { score: number }) => b.score - a.score)
+      .slice(0, 5)
+      .map(({ product }: { product: ShopifyProduct }) => product);
+  }, [debouncedQuery, products, allProductsData]);
+
+  const handleClear = useCallback(() => {
     setQuery("");
     setDebouncedQuery("");
     inputRef.current?.focus();
-  };
+  }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) {
       router.push(`/search?q=${encodeURIComponent(query.trim())}`);
       setIsFocused(false);
       inputRef.current?.blur();
     }
-  };
+  }, [query, router]);
 
   // Keyboard shortcut: Cmd+K or Ctrl+K to focus search
   useEffect(() => {
@@ -196,21 +246,6 @@ export function SearchDropdown({ placeholder = "Search products..." }: SearchDro
     }
   }, [showDropdown]);
 
-  // Debug logs
-  useEffect(() => {
-    if (isFocused) {
-      console.log("Search state:", {
-        debouncedQuery,
-        isLoading,
-        isLoadingAll,
-        hasResults,
-        productsCount: products.length,
-        allProductsCount: allProductsData?.length || 0,
-        allError
-      });
-    }
-  }, [isFocused, debouncedQuery, isLoading, isLoadingAll, hasResults, products, allProductsData, allError]);
-
   return (
     <div className="relative w-full max-w-md">
       <form onSubmit={handleSubmit}>
@@ -256,8 +291,27 @@ export function SearchDropdown({ placeholder = "Search products..." }: SearchDro
         )}
       </form>
 
+      {/* Autocomplete Suggestions - Show inline below search bar */}
+      {isFocused && autocompleteOptions.length > 0 && query.length >= 2 && !debouncedQuery && (
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-zinc-800 rounded-xl shadow-lg border border-gray-200 dark:border-zinc-700 overflow-hidden z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+          {autocompleteOptions.map((option, index) => (
+            <button
+              key={index}
+              onClick={() => {
+                setQuery(option);
+                setDebouncedQuery(option);
+              }}
+              className="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors flex items-center gap-2 text-sm"
+            >
+              <Search size={14} className="text-gray-400 dark:text-zinc-500" />
+              <span className="text-gray-900 dark:text-white">{option}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Search Dropdown - Nike-inspired, full-width design */}
-      {showDropdown && (
+      {showDropdown && debouncedQuery && (
         <div
           ref={dropdownRef}
           className="fixed left-0 right-0 top-[80px] md:top-18 z-40 animate-in fade-in slide-in-from-top-2 duration-200"
@@ -543,5 +597,14 @@ export function SearchDropdown({ placeholder = "Search products..." }: SearchDro
         </div>
       )}
     </div>
+  );
+}
+
+// Wrap with error boundary and export
+export function SearchDropdown({ placeholder = "Search products..." }: SearchDropdownProps) {
+  return (
+    <SearchErrorBoundary>
+      <SearchDropdownContent placeholder={placeholder} />
+    </SearchErrorBoundary>
   );
 }

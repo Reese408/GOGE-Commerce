@@ -10,19 +10,25 @@ import { Button } from "@/components/ui/button";
 export function UndoToast() {
   const { removedItems, undoRemoveById, dismissRemovedItem } = useCartStore();
   const timersRef = useRef<Map<number, NodeJS.Timeout>>(new Map());
+  const dismissRef = useRef(dismissRemovedItem);
+
+  // Keep dismiss function ref updated
+  useEffect(() => {
+    dismissRef.current = dismissRemovedItem;
+  }, [dismissRemovedItem]);
 
   useEffect(() => {
-    // Create timers for new items
+    // Create timers for new items only
     removedItems.forEach((removed) => {
       if (!timersRef.current.has(removed.timestamp)) {
         const timer = setTimeout(() => {
-          dismissRemovedItem(removed.timestamp);
+          dismissRef.current(removed.timestamp);
         }, 5000);
         timersRef.current.set(removed.timestamp, timer);
       }
     });
 
-    // Clean up timers for removed items
+    // Clean up timers for items that were manually removed (undo/dismiss)
     const currentTimestamps = new Set(removedItems.map(r => r.timestamp));
     timersRef.current.forEach((timer, timestamp) => {
       if (!currentTimestamps.has(timestamp)) {
@@ -30,15 +36,10 @@ export function UndoToast() {
         timersRef.current.delete(timestamp);
       }
     });
-
-    return () => {
-      timersRef.current.forEach(timer => clearTimeout(timer));
-      timersRef.current.clear();
-    };
-  }, [removedItems, dismissRemovedItem]);
+  }, [removedItems]);
 
   return (
-    <div className="fixed bottom-4 right-4 md:right-[26rem] w-[calc(100%-2rem)] md:w-[400px] z-[60] pointer-events-none flex flex-col-reverse gap-2">
+    <div className="absolute bottom-4 left-4 right-4 z-60 pointer-events-none flex flex-col-reverse gap-2">
       <AnimatePresence mode="popLayout">
         {removedItems.map((removed) => (
           <motion.div

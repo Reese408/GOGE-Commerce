@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ShoppingBag } from "lucide-react";
-import { SearchDropdown } from "@/components/search/search-dropdown";
+import { lazy, Suspense, useState } from "react";
 import { ModeToggle } from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
 import NavBar from "@/components/navigation/navbar";
@@ -11,7 +11,14 @@ import { useCartStore } from "@/lib/store/cart-store";
 import { CartSidebar } from "@/components/cart/cart-sidebar";
 import { QueryProvider } from "@/lib/providers/query-provider";
 import { Footer } from "@/components/layout-page/footer";
-import { useState } from "react";
+import { Search } from "lucide-react";
+
+// Lazy load heavy components for better performance
+const SearchDropdown = lazy(() =>
+  import("@/components/search/search-dropdown").then(module => ({
+    default: module.SearchDropdown
+  }))
+);
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -57,7 +64,16 @@ export function MainLayout({ children }: MainLayoutProps) {
 
             {/* Search - Desktop */}
             <div className="hidden lg:block flex-1 max-w-md mx-8">
-              <SearchDropdown />
+              <Suspense fallback={
+                <div className="relative w-full">
+                  <div className="flex items-center ring-1 ring-gray-300 dark:ring-zinc-700 rounded-full overflow-hidden bg-white dark:bg-zinc-800 px-4 py-2.5">
+                    <Search className="text-gray-400 dark:text-zinc-500 mr-3" size={18} />
+                    <span className="text-sm text-gray-400 dark:text-zinc-500">Search products...</span>
+                  </div>
+                </div>
+              }>
+                <SearchDropdown />
+              </Suspense>
             </div>
 
             {/* Actions */}
@@ -86,7 +102,16 @@ export function MainLayout({ children }: MainLayoutProps) {
 
           {/* Mobile Search */}
           <div className="lg:hidden pb-4">
-            <SearchDropdown />
+            <Suspense fallback={
+              <div className="relative w-full">
+                <div className="flex items-center ring-1 ring-gray-300 dark:ring-zinc-700 rounded-full overflow-hidden bg-white dark:bg-zinc-800 px-4 py-2.5">
+                  <Search className="text-gray-400 dark:text-zinc-500 mr-3" size={18} />
+                  <span className="text-sm text-gray-400 dark:text-zinc-500">Search products...</span>
+                </div>
+              </div>
+            }>
+              <SearchDropdown />
+            </Suspense>
           </div>
         </div>
       </nav>
