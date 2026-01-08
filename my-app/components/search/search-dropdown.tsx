@@ -214,17 +214,20 @@ function SearchDropdownContent({ placeholder = "Search products..." }: SearchDro
         !inputRef.current?.contains(e.target as Node)
       ) {
         setIsFocused(false);
+        inputRef.current?.blur(); // Ensure input loses focus
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    if (isFocused) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [isFocused]);
 
-  const showDropdown = isFocused;
+  const showDropdown = isFocused && debouncedQuery.length > 0;
   const hasResults = products.length > 0 || collections.length > 0;
 
-  // Lock body scroll when dropdown is open (Nike-style)
+  // Lock body scroll when dropdown is open
   useEffect(() => {
     if (showDropdown) {
       // Save original body overflow
@@ -239,12 +242,22 @@ function SearchDropdownContent({ placeholder = "Search products..." }: SearchDro
       document.body.style.paddingRight = `${scrollbarWidth}px`;
 
       return () => {
-        // Restore original styles
-        document.body.style.overflow = originalOverflow;
-        document.body.style.paddingRight = originalPaddingRight;
+        // Restore original styles - use setTimeout to ensure cleanup happens after state updates
+        setTimeout(() => {
+          document.body.style.overflow = originalOverflow;
+          document.body.style.paddingRight = originalPaddingRight;
+        }, 0);
       };
     }
   }, [showDropdown]);
+
+  // Safety cleanup: Always restore scroll on unmount
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    };
+  }, []);
 
   return (
     <div className="relative w-full max-w-md">
@@ -266,6 +279,10 @@ function SearchDropdownContent({ placeholder = "Search products..." }: SearchDro
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => setIsFocused(true)}
+            onBlur={() => {
+              // Delay to allow click events to fire first (e.g., clicking a search result)
+              setTimeout(() => setIsFocused(false), 150);
+            }}
             placeholder={placeholder}
             className="w-full pl-12 pr-10 py-2.5 text-sm bg-transparent outline-none text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-500"
           />

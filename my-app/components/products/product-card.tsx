@@ -90,6 +90,7 @@ export function ProductCard({ product, featured = false }: ProductCardProps) {
             <AddToCartButton
               product={{
                 id: product.id,
+                handle: product.handle,
                 title: product.title,
                 price: product.price,
                 currencyCode: product.currencyCode,
@@ -158,6 +159,7 @@ export function ProductCard({ product, featured = false }: ProductCardProps) {
                         key={variant.id}
                         product={{
                           id: variant.id,
+                          handle: product.handle,
                           title: product.title,
                           price: parseFloat(variant.price.amount),
                           currencyCode: variant.price.currencyCode,

@@ -54,6 +54,7 @@ export function AddToCartButton({ product, size, disabled = false, variant }: Ad
     addItem({
       id: product.id, // This is the variant ID
       productId: product.id,
+      handle: product.handle,
       title: product.title,
       price: product.price,
       currencyCode: product.currencyCode,

@@ -24,13 +24,15 @@ function CartSidebarContent() {
   // Fetch products for "You May Also Like" section
   const { data: allProducts } = useProducts(8);
 
-  // Memoize suggested products - only recalculate when items or allProducts change
-  // Use stable seed for random sorting instead of Math.random()
   const suggestedProducts = useMemo(() => {
     if (!allProducts) return [];
 
+    // Get all product handles that are in the cart
+    const cartProductHandles = new Set(items.map(item => item.handle));
+
+    // Filter out products that are already in cart (by handle, so any variant excludes the product)
     const availableProducts = allProducts.filter(
-      product => !items.some(item => item.id === product.id)
+      product => !cartProductHandles.has(product.handle)
     );
 
     // Fisher-Yates shuffle with stable seed based on cart items count

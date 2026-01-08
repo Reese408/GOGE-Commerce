@@ -3,6 +3,7 @@
 export interface CartItem {
   id: string;
   productId: string;
+  handle: string; // Product handle for identifying the base product
   title: string;
   price: number;
   currencyCode: string;
@@ -98,6 +99,7 @@ export interface ProductCardData {
 
 export interface AddToCartProductData {
   id: string;
+  handle: string;
   title: string;
   price: number;
   currencyCode: string;

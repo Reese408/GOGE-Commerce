@@ -107,6 +107,7 @@ export function ProductDetail({ productId }: ProductDetailProps) {
     addItem({
       id: selectedVariant.id,
       productId: product.id,
+      handle: product.handle,
       title: product.title,
       price: parseFloat(selectedVariant.price.amount),
       currencyCode: selectedVariant.price.currencyCode,
@@ -245,47 +246,6 @@ export function ProductDetail({ productId }: ProductDetailProps) {
                     Size Guide
                   </button>
                 </div>
-
-                {/* Stock Progress Bar - Shows for selected variant */}
-                {selectedVariant && (() => {
-                  const quantityAvailable = selectedVariant.quantityAvailable ?? 0;
-                  const maxStock = 20;
-                  const percentageAvailable = Math.min((quantityAvailable / maxStock) * 100, 100);
-
-                  return (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3 }}
-                      className="space-y-2 p-3 bg-gray-50 dark:bg-zinc-800 rounded-lg"
-                    >
-                      <div className="flex justify-between text-sm">
-                        <span className="font-medium text-gray-900 dark:text-white">
-                          Only {quantityAvailable} left!
-                        </span>
-                        <span className="text-gray-500 dark:text-gray-400">
-                          {quantityAvailable}/{maxStock}
-                        </span>
-                      </div>
-                      <div className="w-full h-2.5 bg-gray-200 dark:bg-zinc-700 rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${percentageAvailable}%` }}
-                          transition={{ duration: 0.5, ease: "easeOut" }}
-                          className={`h-full rounded-full ${
-                            percentageAvailable === 0
-                              ? "bg-red-500"
-                              : percentageAvailable <= 25
-                              ? "bg-orange-500"
-                              : percentageAvailable <= 50
-                              ? "bg-yellow-500"
-                              : "bg-green-500"
-                          }`}
-                        />
-                      </div>
-                    </motion.div>
-                  );
-                })()}
 
                 <div className="grid grid-cols-4 gap-3">
                   {sizeOptions.map((size) => {
