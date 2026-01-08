@@ -1,13 +1,34 @@
 "use client";
 
 import { ProductCard } from "@/components/products/product-card";
-import { useProducts } from "@/lib/hooks/use-products";
+import { useCollections } from "@/lib/hooks/use-collections";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { motion } from "framer-motion";
-import { Sparkles, Zap } from "lucide-react";
+import { Sparkles } from "lucide-react";
+import { ShopifyCollection, ShopifyProduct, ProductCardData } from "@/lib/types";
+
+// Transform ShopifyProduct to ProductCardData format
+function transformProduct(product: ShopifyProduct): ProductCardData {
+  const image = product.images.edges[0]?.node;
+  const price = parseFloat(product.priceRange.minVariantPrice.amount);
+  const variantId = product.variants?.edges[0]?.node?.id || product.id;
+  const variants = product.variants?.edges.map(({ node }) => node) || [];
+
+  return {
+    id: variantId,
+    handle: product.handle,
+    title: product.title,
+    description: product.description,
+    price: price,
+    currencyCode: product.priceRange.minVariantPrice.currencyCode,
+    imageUrl: image?.url,
+    availableForSale: product.availableForSale,
+    variants: variants,
+    productType: product.productType,
+  };
+}
 
 export default function CollectionsPage() {
-  const { data: products, isLoading, isError, error } = useProducts(50);
+  const { data: collections, isLoading, isError, error } = useCollections(10);
 
   if (isLoading) {
     return <LoadingSpinner />;
@@ -18,7 +39,7 @@ export default function CollectionsPage() {
       <div className="flex min-h-[400px] items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4 text-red-600 dark:text-red-400">
-            Error loading products
+            Error loading collections
           </h2>
           <p className="text-gray-600 dark:text-gray-400">
             {error instanceof Error ? error.message : "Something went wrong"}
@@ -28,26 +49,29 @@ export default function CollectionsPage() {
     );
   }
 
-  if (!products || products.length === 0) {
+  if (!collections || collections.length === 0) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
-            No products found
+            No collections found
           </h2>
           <p className="text-gray-600 dark:text-gray-400">
-            Check back soon for new items!
+            Check back soon for new collections!
           </p>
         </div>
       </div>
     );
   }
 
-  // Filter Original Drop products
-  const originalDropProducts = products.filter(product =>
-    product.title.toLowerCase().includes('original') ||
-    product.description.toLowerCase().includes('original drop')
+  // Find First Drop collection
+  const firstDropCollection = collections.find(
+    (collection: ShopifyCollection) =>
+      collection.title.toLowerCase().includes('first drop') ||
+      collection.handle === 'first-drop'
   );
+
+  const firstDropProducts = firstDropCollection?.products?.edges.map((edge: { node: ShopifyProduct }) => transformProduct(edge.node)) || [];
 
   return (
     <div className="min-h-screen bg-white dark:bg-zinc-950">
@@ -62,83 +86,93 @@ export default function CollectionsPage() {
           </p>
         </div>
 
-        {/* New Drop Section - Coming Soon */}
-        <section className="mb-20">
-          <div className="bg-gradient-to-r from-[#D08F90]/10 via-[#927194]/10 to-[#A0B094]/10 rounded-3xl p-8 md:p-12 border-2 border-dashed border-[#927194]/30">
-            <div className="text-center">
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.5 }}
-                className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-[#927194] to-[#D08F90] mb-6"
-              >
-                <Zap className="text-white" size={40} />
-              </motion.div>
-
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
-                  New Drop
-                </h2>
-                <motion.span
-                  animate={{ rotate: [0, 10, -10, 0] }}
-                  transition={{ repeat: Infinity, duration: 2, delay: 0.5 }}
-                  className="text-4xl"
-                >
-                  🚀
-                </motion.span>
-              </div>
-
-              <div className="inline-block bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 px-6 py-3 rounded-full font-semibold mb-4">
-                Coming Soon!
-              </div>
-
-              <p className="text-lg text-gray-700 dark:text-gray-300 max-w-2xl mx-auto mb-6">
-                Fresh designs are on the way! Stay tuned for our latest collection dropping soon.
-              </p>
-
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Follow us on social media to be the first to know when the new drop arrives ✨
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Original Drop Section */}
-        {originalDropProducts.length > 0 ? (
+        {/* First Drop Section */}
+        {firstDropCollection ? (
           <section className="mb-20">
             <div className="bg-gradient-to-r from-[#927194]/10 via-[#D08F90]/10 to-[#A0B094]/10 rounded-3xl p-8 md:p-12 mb-8">
               <div className="flex items-center gap-3 mb-4">
                 <Sparkles className="text-[#927194] dark:text-[#D08F90]" size={36} />
                 <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
-                  Original Drop
+                  {firstDropCollection.title}
                 </h2>
               </div>
               <p className="text-lg text-gray-700 dark:text-gray-300 max-w-3xl">
-                Where it all began. The first designs that started Grace, Ongoing's journey of spreading faith and positivity through creative expression.
+                {firstDropCollection.description || "Where it all began. The first designs that started Grace, Ongoing's journey of spreading faith and positivity through creative expression."}
               </p>
 
               <div className="mt-6 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                 <span className="inline-block w-3 h-3 rounded-full bg-green-500"></span>
-                {originalDropProducts.length} {originalDropProducts.length === 1 ? 'product' : 'products'} available
+                {firstDropProducts.length} {firstDropProducts.length === 1 ? 'product' : 'products'} available
               </div>
             </div>
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-1">
-              {originalDropProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
+            {firstDropProducts.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                {firstDropProducts.map((product: ProductCardData) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 bg-gray-50 dark:bg-zinc-900 rounded-2xl">
+                <p className="text-gray-600 dark:text-gray-400">
+                  Products coming soon to this collection!
+                </p>
+              </div>
+            )}
           </section>
         ) : (
           <section className="mb-20">
             <div className="bg-gradient-to-r from-[#927194]/10 via-[#D08F90]/10 to-[#A0B094]/10 rounded-3xl p-8 md:p-12 text-center">
               <Sparkles className="text-[#927194] dark:text-[#D08F90] mx-auto mb-4" size={48} />
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-                Original Drop
+                First Drop
               </h2>
               <p className="text-lg text-gray-700 dark:text-gray-300 max-w-2xl mx-auto">
-                The original collection will be available soon. Check back to see where it all began!
+                The first collection will be available soon. Check back to see where it all began!
               </p>
+            </div>
+          </section>
+        )}
+
+        {/* Other Collections */}
+        {collections.filter((c: ShopifyCollection) => c.handle !== 'first-drop' && !c.title.toLowerCase().includes('first drop')).length > 0 && (
+          <section className="mb-20">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 text-center">
+              More Collections
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {collections
+                .filter((c: ShopifyCollection) => c.handle !== 'first-drop' && !c.title.toLowerCase().includes('first drop'))
+                .map((collection: ShopifyCollection) => (
+                  <div
+                    key={collection.id}
+                    className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#927194]/5 to-[#D08F90]/5 border border-gray-200 dark:border-zinc-800 hover:shadow-xl transition-all duration-300"
+                  >
+                    {collection.image && (
+                      <div className="aspect-video overflow-hidden">
+                        <img
+                          src={collection.image.url}
+                          alt={collection.image.altText || collection.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
+                    )}
+                    <div className="p-6">
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                        {collection.title}
+                      </h3>
+                      {collection.description && (
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                          {collection.description}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-500">
+                        <span className="inline-block w-2 h-2 rounded-full bg-[#927194]"></span>
+                        {collection.products?.edges.length || 0} products
+                      </div>
+                    </div>
+                  </div>
+                ))}
             </div>
           </section>
         )}

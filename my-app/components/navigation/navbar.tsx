@@ -10,12 +10,24 @@ const navLinks = [
 ];
 
 const shopCategories = [
-  { href: "/shop/t-shirts", label: "T-Shirts", icon: "👕" },
-  { href: "/shop/hoodies", label: "Hoodies", icon: "🧥" },
-  { href: "/shop/sweatshirts", label: "Sweatshirts", icon: "👚" },
-  { href: "/shop/accessories", label: "Accessories", icon: "🎒" },
-  { href: "/shop/stickers", label: "Stickers", icon: "✨" },
-  { href: "/shop", label: "View All", icon: "🛍️" },
+  {
+    href: "/shop?category=shirts",
+    label: "Shirts",
+    color: "from-[#D08F90] to-[#927194]",
+    description: "Faith-inspired tees & tops"
+  },
+  {
+    href: "/shop?category=sweatshirts",
+    label: "Sweatshirts",
+    color: "from-[#927194] to-[#A0B094]",
+    description: "Cozy hoodies & crewnecks"
+  },
+  {
+    href: "/shop?category=accessories",
+    label: "Accessories",
+    color: "from-[#A0B094] to-[#D08F90]",
+    description: "Stickers, buttons & more"
+  },
 ];
 
 export default function NavBar() {
@@ -49,59 +61,44 @@ export default function NavBar() {
           <div className="absolute left-0 right-0 h-6 top-full" />
 
           {/* Mega Menu Dropdown */}
-          <div className="absolute left-1/2 -translate-x-1/2 top-full pt-6 w-screen max-w-4xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none group-hover:pointer-events-auto">
+          <div className="absolute left-1/2 -translate-x-1/2 top-full pt-6 w-screen max-w-3xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none group-hover:pointer-events-auto">
             <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-zinc-800 overflow-hidden">
-              <div className="grid grid-cols-3 gap-8 p-8">
-                {/* Categories Column */}
-                <div className="col-span-2">
-                  <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">
-                    Shop by Category
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    {shopCategories.slice(0, -1).map((category) => (
-                      <Link
-                        key={category.href}
-                        href={category.href}
-                        className="group/item flex items-start gap-4 p-4 rounded-lg hover:bg-[#927194]/5 dark:hover:bg-[#D08F90]/5 transition-all"
-                      >
-                        <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-[#927194]/10 to-[#D08F90]/10 dark:from-[#927194]/20 dark:to-[#D08F90]/20 rounded-lg flex items-center justify-center text-2xl group-hover/item:scale-110 transition-transform">
-                          {category.icon}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-gray-900 dark:text-white group-hover/item:text-[#927194] dark:group-hover/item:text-[#D08F90] transition-colors">
-                            {category.label}
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            Shop now
-                          </p>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
+              <div className="p-6">
+                <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">
+                  Shop by Category
+                </h3>
+                <div className="grid grid-cols-3 gap-4">
+                  {shopCategories.map((category) => (
+                    <Link
+                      key={category.href}
+                      href={category.href}
+                      className="group/item relative overflow-hidden rounded-xl p-5 transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                    >
+                      {/* Gradient Background */}
+                      <div
+                        className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-90 group-hover/item:opacity-100 transition-opacity`}
+                      />
+
+                      {/* Content */}
+                      <div className="relative z-10">
+                        <p className="font-bold text-white mb-1">
+                          {category.label}
+                        </p>
+                        <p className="text-xs text-white/90 font-medium">
+                          {category.description}
+                        </p>
+                      </div>
+                    </Link>
+                  ))}
                 </div>
 
-                {/* Featured/CTA Column */}
-                <div className="bg-gradient-to-br from-[#927194]/10 via-[#D08F90]/10 to-[#A0B094]/10 dark:from-[#927194]/20 dark:via-[#D08F90]/20 dark:to-[#A0B094]/20 rounded-xl p-6 flex flex-col">
-                  <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">
-                    Featured
-                  </h3>
-                  <div className="flex-1 flex flex-col justify-between">
-                    <div>
-                      <p className="font-bold text-lg text-gray-900 dark:text-white mb-2">
-                        New Arrivals
-                      </p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                        Check out our latest faith-inspired designs
-                      </p>
-                    </div>
-                    <Link
-                      href="/shop"
-                      className="inline-flex items-center justify-center px-6 py-3 bg-[#927194] hover:bg-[#927194]/90 text-white rounded-lg font-semibold transition-all hover:scale-105"
-                    >
-                      View All Products
-                    </Link>
-                  </div>
-                </div>
+                {/* View All Link */}
+                <Link
+                  href="/shop?category=all"
+                  className="mt-4 block text-center px-6 py-3 bg-gray-100 dark:bg-zinc-800 hover:bg-[#927194] dark:hover:bg-[#927194] text-gray-700 dark:text-gray-300 hover:text-white rounded-lg font-semibold transition-all"
+                >
+                  View All Products
+                </Link>
               </div>
             </div>
           </div>
@@ -158,7 +155,7 @@ export default function NavBar() {
 
               {/* Shop Categories Dropdown */}
               {mobileShopOpen && (
-                <div className="ml-4 mt-2 space-y-1">
+                <div className="ml-2 mt-2 space-y-2">
                   {shopCategories.map((category) => (
                     <Link
                       key={category.href}
@@ -167,12 +164,36 @@ export default function NavBar() {
                         setMobileMenuOpen(false);
                         setMobileShopOpen(false);
                       }}
-                      className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-[#927194]/10 dark:hover:bg-[#D08F90]/10 rounded-lg transition-colors"
+                      className="relative overflow-hidden block rounded-xl p-4 transition-all duration-300 hover:scale-102"
                     >
-                      <span className="text-xl">{category.icon}</span>
-                      {category.label}
+                      {/* Gradient Background */}
+                      <div
+                        className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-90`}
+                      />
+
+                      {/* Content */}
+                      <div className="relative z-10">
+                        <p className="font-bold text-white text-sm mb-0.5">
+                          {category.label}
+                        </p>
+                        <p className="text-xs text-white/90">
+                          {category.description}
+                        </p>
+                      </div>
                     </Link>
                   ))}
+
+                  {/* View All Link */}
+                  <Link
+                    href="/shop?category=all"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      setMobileShopOpen(false);
+                    }}
+                    className="block text-center px-4 py-3 bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-gray-300 rounded-lg font-semibold text-sm transition-colors hover:bg-gray-200 dark:hover:bg-zinc-700"
+                  >
+                    View All Products
+                  </Link>
                 </div>
               )}
             </div>

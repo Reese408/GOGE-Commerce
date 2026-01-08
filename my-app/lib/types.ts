@@ -64,6 +64,11 @@ export interface ShopifyCollection {
     url: string;
     altText: string | null;
   };
+  products?: {
+    edges: Array<{
+      node: ShopifyProduct;
+    }>;
+  };
 }
 
 export interface ShopifyResponse {
@@ -88,6 +93,7 @@ export interface ProductCardData {
   imageUrl?: string;
   availableForSale: boolean;
   variants?: ProductVariant[];
+  productType?: string;
 }
 
 export interface AddToCartProductData {

@@ -46,6 +46,7 @@ export const ALL_PRODUCTS_QUERY = `
           title
           description
           handle
+          productType
           priceRange {
             minVariantPrice {
               amount
@@ -151,6 +152,134 @@ export const SEARCH_COLLECTIONS_QUERY = `
           image {
             url
             altText
+          }
+        }
+      }
+    }
+  }
+`;
+
+// Query to fetch all collections
+export const ALL_COLLECTIONS_QUERY = `
+  query AllCollections($first: Int = 10) {
+    collections(first: $first) {
+      edges {
+        node {
+          id
+          title
+          handle
+          description
+          image {
+            url
+            altText
+          }
+          products(first: 50) {
+            edges {
+              node {
+                id
+                title
+                description
+                handle
+                productType
+                priceRange {
+                  minVariantPrice {
+                    amount
+                    currencyCode
+                  }
+                }
+                images(first: 1) {
+                  edges {
+                    node {
+                      url
+                      altText
+                      width
+                      height
+                    }
+                  }
+                }
+                variants(first: 20) {
+                  edges {
+                    node {
+                      id
+                      title
+                      availableForSale
+                      quantityAvailable
+                      price {
+                        amount
+                        currencyCode
+                      }
+                      selectedOptions {
+                        name
+                        value
+                      }
+                    }
+                  }
+                }
+                availableForSale
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+// Query to fetch a single collection by handle
+export const COLLECTION_BY_HANDLE_QUERY = `
+  query CollectionByHandle($handle: String!) {
+    collectionByHandle(handle: $handle) {
+      id
+      title
+      handle
+      description
+      image {
+        url
+        altText
+      }
+      products(first: 50) {
+        edges {
+          node {
+            id
+            title
+            description
+            handle
+            productType
+            priceRange {
+              minVariantPrice {
+                amount
+                currencyCode
+              }
+            }
+            images(first: 1) {
+              edges {
+                node {
+                  url
+                  altText
+                  width
+                  height
+                }
+              }
+            }
+            variants(first: 20) {
+              edges {
+                node {
+                  id
+                  title
+                  availableForSale
+                  quantityAvailable
+                  price {
+                    amount
+                    currencyCode
+                  }
+                  selectedOptions {
+                    name
+                    value
+                  }
+                }
+              }
+            }
+            availableForSale
           }
         }
       }

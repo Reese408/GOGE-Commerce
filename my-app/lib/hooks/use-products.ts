@@ -20,8 +20,8 @@ async function fetchProducts(count: number = 10): Promise<ProductCardData[]> {
     const variants = product.variants?.edges.map(({ node }) => node) || [];
 
     return {
-      id: variantId, // Use variant ID instead of product ID for Shopify checkout
-      handle: product.handle, // Use handle for product page routing
+      id: variantId, 
+      handle: product.handle, 
       title: product.title,
       description: product.description,
       price: price,
@@ -29,6 +29,7 @@ async function fetchProducts(count: number = 10): Promise<ProductCardData[]> {
       imageUrl: image?.url,
       availableForSale: product.availableForSale,
       variants: variants,
+      productType: product.productType,
     };
   });
 }
