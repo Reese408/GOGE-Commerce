@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Search, X, Lightbulb, Package, Folder, TrendingUp } from "lucide-react";
 import Image from "next/image";
@@ -44,32 +45,25 @@ function calculateSimilarity(str1: string, str2: string): number {
 // Popular/suggested search terms - customize these based on your store
 const SUGGESTED_SEARCHES = [
   "Shirts",
+  "Buttons",
   "Hoodies",
-  "Best Sellers",
-  "All Products",
-];
-
-// Common product keywords for autocomplete
-const AUTOCOMPLETE_KEYWORDS = [
-  "shirt", "shirts", "t-shirt", "tee",
-  "hoodie", "hoodies", "sweatshirt",
-  "pants", "jeans", "trousers",
-  "shoes", "sneakers", "boots",
-  "jacket", "coat", "blazer",
-  "dress", "skirt",
-  "hat", "cap", "beanie",
-  "bag", "backpack", "purse",
-  "socks", "accessories",
-  "shorts", "swimwear",
+  "Stickers",
 ];
 
 function SearchDropdownContent({ placeholder = "Search products..." }: SearchDropdownProps) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
-  const [isFocused, setIsFocused] = useState(false);
   const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
+
+  // Track mounting for portal
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
 
   // Debounce search query
   useEffect(() => {
@@ -80,17 +74,20 @@ function SearchDropdownContent({ placeholder = "Search products..." }: SearchDro
     return () => clearTimeout(timer);
   }, [query]);
 
-  // Use search hook - search when focused OR when there's a query
-  const { products, collections, isLoading } = useSearch(
-    debouncedQuery,
-    debouncedQuery.length > 0
-  );
+  // Fetch products and collections based on debounced query
+  const {
+    products: productsData,
+    collections: collectionsData,
+    isLoading: isLoadingProducts,
+  } = useSearch(debouncedQuery, true);
 
-  // Fetch all products for suggestions when no results
-  const { data: allProductsData, isLoading: isLoadingAll } = useQuery({
-    queryKey: ["all-products-suggestions"],
+  const isLoadingCollections = isLoadingProducts; // Same loading state
+
+  // Fetch all products for "Popular Products" section
+  const { data: allProductsResponse } = useQuery({
+    queryKey: ["all-products-search"],
     queryFn: async () => {
-      const response = await fetch(`https://${SHOPIFY_DOMAIN}/api/2025-01/graphql.json`, {
+      const response = await fetch(`https://${SHOPIFY_DOMAIN}/api/2024-01/graphql.json`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -98,79 +95,70 @@ function SearchDropdownContent({ placeholder = "Search products..." }: SearchDro
         },
         body: JSON.stringify({
           query: ALL_PRODUCTS_QUERY,
-          variables: { first: 20 },
+          variables: { first: 10 },
         }),
       });
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch products: ${response.status}`);
-      }
-
-      const result = await response.json();
-
-      if (!result.data || !result.data.products) {
-        throw new Error("Invalid response structure");
-      }
-
-      return result.data.products.edges.map((edge: { node: ShopifyProduct }) => edge.node);
+      const data = await response.json();
+      return data;
     },
-    staleTime: 1000 * 60 * 10, // 10 minutes
+    staleTime: 5 * 60 * 1000,
   });
 
-  // Memoize autocomplete suggestions - only recalculate when dependencies change
+  const allProductsData = allProductsResponse?.data?.products?.edges?.map((edge: any) => edge.node);
+
+  // Generate autocomplete suggestions based on input and available products/collections
   const autocompleteOptions = useMemo(() => {
-    if (query.length < 2 || query.length >= debouncedQuery.length + 2) {
-      return [];
+    if (query.length < 2) return [];
+
+    const suggestions: string[] = [];
+
+    // Add matching product titles
+    if (allProductsData) {
+      allProductsData.forEach((product: ShopifyProduct) => {
+        const similarity = calculateSimilarity(product.title, query);
+        if (similarity > 40 && !suggestions.includes(product.title)) {
+          suggestions.push(product.title);
+        }
+      });
     }
 
-    const queryLower = query.toLowerCase();
+    // Add suggested searches that match
+    SUGGESTED_SEARCHES.forEach((term) => {
+      const similarity = calculateSimilarity(term, query);
+      if (similarity > 40 && !suggestions.includes(term)) {
+        suggestions.push(term);
+      }
+    });
 
-    // Get matching keywords from our list
-    const keywordMatches = AUTOCOMPLETE_KEYWORDS
-      .filter(keyword => keyword.startsWith(queryLower) && keyword !== queryLower)
-      .slice(0, 5);
+    return suggestions.slice(0, 5);
+  }, [query, allProductsData]);
 
-    // Get matching product titles and types from all products
-    const productMatches = allProductsData
-      ? allProductsData
-          .flatMap((product: ShopifyProduct) => {
-            const matches = [];
-            const title = product.title.toLowerCase();
-            const type = (product.productType || '').toLowerCase();
-
-            if (title.includes(queryLower)) matches.push(product.title);
-            if (type.includes(queryLower) && type !== title) matches.push(product.productType);
-
-            return matches;
-          })
-          .filter(Boolean)
-          .slice(0, 3)
-      : [];
-
-    // Combine and deduplicate
-    return [...new Set([...keywordMatches, ...productMatches])].slice(0, 5);
-  }, [query, debouncedQuery, allProductsData]);
-
-  // Memoize similar products for fuzzy matching - expensive calculation
-  const similarProducts = useMemo(() => {
-    if (debouncedQuery.length === 0 || products.length > 0 || !allProductsData) {
-      return [];
+  const products = useMemo(() => {
+    console.log('[SearchDropdown] productsData:', productsData);
+    console.log('[SearchDropdown] productsData type:', typeof productsData);
+    console.log('[SearchDropdown] productsData is Array:', Array.isArray(productsData));
+    console.log('[SearchDropdown] productsData length:', productsData?.length);
+    if (productsData && productsData.length > 0) {
+      console.log('[SearchDropdown] First product:', productsData[0]);
     }
+    return Array.isArray(productsData) ? productsData : [];
+  }, [productsData]);
 
-    return allProductsData
-      .map((product: ShopifyProduct) => ({
-        product,
-        score: Math.max(
-          calculateSimilarity(product.title, debouncedQuery),
-          product.productType ? calculateSimilarity(product.productType, debouncedQuery) : 0,
-          calculateSimilarity(product.description, debouncedQuery)
-        ),
-      }))
-      .filter(({ score }: { score: number }) => score > 0)
-      .sort((a: { score: number }, b: { score: number }) => b.score - a.score)
-      .slice(0, 5)
-      .map(({ product }: { product: ShopifyProduct }) => product);
-  }, [debouncedQuery, products, allProductsData]);
+  const collections = useMemo(() => {
+    console.log('[SearchDropdown] collectionsData:', collectionsData);
+    console.log('[SearchDropdown] collectionsData is Array:', Array.isArray(collectionsData));
+    return Array.isArray(collectionsData) ? collectionsData : [];
+  }, [collectionsData]);
+
+  const handleSubmit = useCallback((e: React.FormEvent) => {
+    e.preventDefault();
+    if (debouncedQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(debouncedQuery)}`);
+      setIsFocused(false);
+      inputRef.current?.blur();
+    }
+  }, [debouncedQuery, router]);
 
   const handleClear = useCallback(() => {
     setQuery("");
@@ -178,34 +166,14 @@ function SearchDropdownContent({ placeholder = "Search products..." }: SearchDro
     inputRef.current?.focus();
   }, []);
 
-  const handleSubmit = useCallback((e: React.FormEvent) => {
-    e.preventDefault();
-    if (query.trim()) {
-      router.push(`/search?q=${encodeURIComponent(query.trim())}`);
-      setIsFocused(false);
-      inputRef.current?.blur();
-    }
-  }, [query, router]);
-
-  // Keyboard shortcut: Cmd+K or Ctrl+K to focus search
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        inputRef.current?.focus();
-      }
-      // ESC to close dropdown
-      if (e.key === "Escape") {
-        setIsFocused(false);
-        inputRef.current?.blur();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+  const handleCancel = useCallback(() => {
+    setIsFocused(false);
+    setQuery("");
+    setDebouncedQuery("");
+    inputRef.current?.blur();
   }, []);
 
-  // Click outside to close
+  // Click outside to close (desktop only)
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -214,11 +182,11 @@ function SearchDropdownContent({ placeholder = "Search products..." }: SearchDro
         !inputRef.current?.contains(e.target as Node)
       ) {
         setIsFocused(false);
-        inputRef.current?.blur(); // Ensure input loses focus
+        inputRef.current?.blur();
       }
     };
 
-    if (isFocused) {
+    if (isFocused && window.innerWidth >= 1024) { // Only on desktop (lg breakpoint)
       document.addEventListener("mousedown", handleClickOutside);
       return () => document.removeEventListener("mousedown", handleClickOutside);
     }
@@ -227,29 +195,35 @@ function SearchDropdownContent({ placeholder = "Search products..." }: SearchDro
   const showDropdown = isFocused && debouncedQuery.length > 0;
   const hasResults = products.length > 0 || collections.length > 0;
 
-  // Lock body scroll when dropdown is open
+  // Debug logging
+  console.log('[SearchDropdown] State:', {
+    isFocused,
+    query,
+    debouncedQuery,
+    showDropdown,
+    hasResults,
+    productsCount: products.length,
+    collectionsCount: collections.length,
+    isLoadingProducts,
+    isLoadingCollections
+  });
+
+  // Lock body scroll when mobile search is open
   useEffect(() => {
-    if (showDropdown) {
-      // Save original body overflow
+    if (isFocused && window.innerWidth < 1024) { // Only on mobile
       const originalOverflow = document.body.style.overflow;
       const originalPaddingRight = document.body.style.paddingRight;
-
-      // Get scrollbar width to prevent layout shift
       const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
 
-      // Lock scroll and compensate for scrollbar
       document.body.style.overflow = 'hidden';
       document.body.style.paddingRight = `${scrollbarWidth}px`;
 
       return () => {
-        // Restore original styles - use setTimeout to ensure cleanup happens after state updates
-        setTimeout(() => {
-          document.body.style.overflow = originalOverflow;
-          document.body.style.paddingRight = originalPaddingRight;
-        }, 0);
+        document.body.style.overflow = originalOverflow;
+        document.body.style.paddingRight = originalPaddingRight;
       };
     }
-  }, [showDropdown]);
+  }, [isFocused]);
 
   // Safety cleanup: Always restore scroll on unmount
   useEffect(() => {
@@ -259,9 +233,185 @@ function SearchDropdownContent({ placeholder = "Search products..." }: SearchDro
     };
   }, []);
 
+  // Mobile search overlay content
+  const mobileSearchOverlay = isFocused && mounted ? (
+    <div className="lg:hidden fixed inset-0 z-9999 bg-white dark:bg-zinc-900 flex flex-col">
+          {/* Mobile Search Header */}
+          <div className="flex items-center gap-3 p-4 border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+            <div className="flex-1 relative">
+              <Search
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 pointer-events-none"
+                size={18}
+              />
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                autoFocus
+                placeholder={placeholder}
+                className="w-full pl-12 pr-4 py-2.5 text-sm bg-gray-100 dark:bg-zinc-800 rounded-full outline-none text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-500"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="text-[#927194] dark:text-[#D08F90] font-medium text-sm whitespace-nowrap px-2"
+            >
+              Cancel
+            </button>
+          </div>
+
+          {/* Mobile Search Results - Scrollable */}
+          <div className="flex-1 overflow-y-auto">
+            {debouncedQuery.length > 0 ? (
+              /* Show search results when there's a query */
+              <div className="p-4">
+                {isLoadingProducts || isLoadingCollections ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#927194] dark:border-[#D08F90]"></div>
+                  </div>
+                ) : hasResults ? (
+                  <div className="space-y-6">
+                    {/* Products Section */}
+                    {products.length > 0 && (
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                          <Package size={16} />
+                          Products
+                        </h3>
+                        <div className="space-y-2">
+                          {products.map((product: ShopifyProduct) => {
+                            const imageUrl = product.images?.edges?.[0]?.node?.url;
+                            const price = parseFloat(product.priceRange?.minVariantPrice?.amount || "0");
+
+                            return (
+                              <Link
+                                key={product.id}
+                                href={`/products/${product.handle}`}
+                                onClick={handleCancel}
+                                className="flex gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors"
+                              >
+                                {imageUrl && (
+                                  <div className="relative w-16 h-16 rounded-md overflow-hidden bg-gray-100 dark:bg-zinc-800 flex-shrink-0">
+                                    <Image
+                                      src={imageUrl}
+                                      alt={product.title}
+                                      fill
+                                      className="object-cover"
+                                      sizes="64px"
+                                    />
+                                  </div>
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-gray-900 dark:text-white line-clamp-2">
+                                    {product.title}
+                                  </p>
+                                  <p className="text-sm font-semibold text-[#927194] dark:text-[#D08F90] mt-1">
+                                    {new Intl.NumberFormat("en-US", {
+                                      style: "currency",
+                                      currency: product.priceRange?.minVariantPrice?.currencyCode || "USD",
+                                    }).format(price)}
+                                  </p>
+                                </div>
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Collections Section */}
+                    {collections.length > 0 && (
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                          <Folder size={16} />
+                          Collections
+                        </h3>
+                        <div className="space-y-2">
+                          {collections.map((collection: ShopifyCollection) => {
+                            const imageUrl = collection.image?.url;
+
+                            return (
+                              <Link
+                                key={collection.id}
+                                href={`/collections/${collection.handle}`}
+                                onClick={handleCancel}
+                                className="flex gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors"
+                              >
+                                {imageUrl && (
+                                  <div className="relative w-16 h-16 rounded-md overflow-hidden bg-gray-100 dark:bg-zinc-800 flex-shrink-0">
+                                    <Image
+                                      src={imageUrl}
+                                      alt={collection.title}
+                                      fill
+                                      className="object-cover"
+                                      sizes="64px"
+                                    />
+                                  </div>
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                    {collection.title}
+                                  </p>
+                                  {collection.description && (
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1 mt-1">
+                                      {collection.description}
+                                    </p>
+                                  )}
+                                </div>
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <Search size={48} className="text-gray-300 dark:text-zinc-700 mb-4" />
+                    <p className="text-gray-600 dark:text-gray-400 text-sm">
+                      No results found for "{debouncedQuery}"
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Show popular searches when no query */
+              <div className="p-4">
+                <div className="mb-6">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                    <TrendingUp size={16} />
+                    Popular Searches
+                  </h3>
+                  <div className="space-y-1">
+                    {SUGGESTED_SEARCHES.map((searchTerm) => (
+                      <button
+                        key={searchTerm}
+                        onClick={() => {
+                          setQuery(searchTerm);
+                          setDebouncedQuery(searchTerm);
+                        }}
+                        className="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors text-sm text-gray-700 dark:text-gray-300 flex items-center justify-between"
+                      >
+                        {searchTerm}
+                        <Search size={16} className="text-gray-400 dark:text-zinc-600" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+  ) : null;
+
   return (
     <div className="relative w-full max-w-md">
-      <form onSubmit={handleSubmit}>
+      {/* Render mobile overlay in portal to document.body */}
+      {mounted && typeof document !== 'undefined' && mobileSearchOverlay && createPortal(mobileSearchOverlay, document.body)}
+
+      {/* Desktop Search Input */}
+      <form onSubmit={handleSubmit} className="hidden lg:block">
         <div
           className={`relative flex items-center transition-all duration-200 ${
             isFocused
@@ -280,7 +430,7 @@ function SearchDropdownContent({ placeholder = "Search products..." }: SearchDro
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => setIsFocused(true)}
             onBlur={() => {
-              // Delay to allow click events to fire first (e.g., clicking a search result)
+              // Delay to allow click events to fire first
               setTimeout(() => setIsFocused(false), 150);
             }}
             placeholder={placeholder}
@@ -308,9 +458,19 @@ function SearchDropdownContent({ placeholder = "Search products..." }: SearchDro
         )}
       </form>
 
-      {/* Autocomplete Suggestions - Show inline below search bar */}
+      {/* Mobile Search Input - Triggers Full Screen */}
+      <button
+        type="button"
+        onClick={() => setIsFocused(true)}
+        className="lg:hidden w-full flex items-center gap-3 px-4 py-2.5 bg-white dark:bg-zinc-800 rounded-full ring-1 ring-gray-300 dark:ring-zinc-700 text-left"
+      >
+        <Search className="text-gray-400 dark:text-zinc-500" size={18} />
+        <span className="text-sm text-gray-400 dark:text-zinc-500">{placeholder}</span>
+      </button>
+
+      {/* Autocomplete Suggestions - Desktop only */}
       {isFocused && autocompleteOptions.length > 0 && query.length >= 2 && !debouncedQuery && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-zinc-800 rounded-xl shadow-lg border border-gray-200 dark:border-zinc-700 overflow-hidden z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+        <div className="hidden lg:block absolute top-full left-0 right-0 mt-2 bg-white dark:bg-zinc-800 rounded-xl shadow-lg border border-gray-200 dark:border-zinc-700 overflow-hidden z-50 animate-in fade-in slide-in-from-top-1 duration-150">
           {autocompleteOptions.map((option, index) => (
             <button
               key={index}
@@ -327,56 +487,36 @@ function SearchDropdownContent({ placeholder = "Search products..." }: SearchDro
         </div>
       )}
 
-      {/* Search Dropdown - Nike-inspired, full-width design */}
+      {/* Search Dropdown - Desktop only, full-width design */}
       {showDropdown && debouncedQuery && (
         <div
           ref={dropdownRef}
-          className="fixed left-0 right-0 top-[80px] md:top-18 z-40 animate-in fade-in slide-in-from-top-2 duration-200"
+          className="hidden lg:block fixed left-0 right-0 top-[80px] md:top-18 z-60 animate-in fade-in slide-in-from-top-2 duration-200"
         >
           <div className="bg-white dark:bg-zinc-900 shadow-2xl border-t border-gray-200 dark:border-zinc-800" style={{ maxHeight: 'calc(100vh - 80px)', overflowY: 'auto' }}>
             <div className="container mx-auto px-4 md:px-6 py-6 md:py-8 max-w-6xl">
 
-              {/* Empty/Initial State - Show Suggested Searches */}
-              {debouncedQuery.length === 0 ? (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                  {/* Left Column - Suggested Searches */}
-                  <div>
-                    <div className="flex items-center gap-2 mb-6">
-                      <TrendingUp size={20} className="text-[#927194] dark:text-[#D08F90]" />
-                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                        Popular Searches
-                      </h3>
-                    </div>
-                    <div className="space-y-2">
-                      {SUGGESTED_SEARCHES.map((searchTerm) => (
-                        <button
-                          key={searchTerm}
-                          onClick={() => {
-                            setQuery(searchTerm);
-                            setDebouncedQuery(searchTerm);
-                          }}
-                          className="w-full text-left px-5 py-4 rounded-xl hover:bg-gray-50 dark:hover:bg-zinc-800 transition-all group flex items-center justify-between border border-transparent hover:border-gray-200 dark:hover:border-zinc-700"
-                        >
-                          <span className="text-base text-gray-700 dark:text-gray-300 group-hover:text-[#927194] dark:group-hover:text-[#D08F90] font-medium">
-                            {searchTerm}
-                          </span>
-                          <Search size={18} className="text-gray-300 dark:text-zinc-600 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+              {/* Loading State */}
+              {(isLoadingProducts || isLoadingCollections) && (
+                <div className="flex items-center justify-center py-20">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#927194] dark:border-[#D08F90]"></div>
+                </div>
+              )}
 
-                  {/* Right Column - Popular Products */}
-                  {allProductsData && allProductsData.length > 0 ? (
+              {/* Search Results */}
+              {!isLoadingProducts && !isLoadingCollections && hasResults && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                  {/* Products Column */}
+                  {products.length > 0 && (
                     <div>
                       <div className="flex items-center gap-2 mb-6">
                         <Package size={20} className="text-[#927194] dark:text-[#D08F90]" />
                         <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                          Popular Products
+                          Products
                         </h3>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
-                        {allProductsData.slice(0, 6).map((product: ShopifyProduct) => {
+                        {products.slice(0, 6).map((product: ShopifyProduct) => {
                           const imageUrl = product.images.edges[0]?.node.url;
                           const price = parseFloat(product.priceRange.minVariantPrice.amount);
 
@@ -411,202 +551,71 @@ function SearchDropdownContent({ placeholder = "Search products..." }: SearchDro
                         })}
                       </div>
                     </div>
-                  ) : isLoadingAll ? (
-                    <div className="flex items-center justify-center py-12">
-                      <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-[#927194] dark:border-zinc-700 dark:border-t-[#D08F90]" />
-                    </div>
-                  ) : null}
-                </div>
-              ) : isLoading ? (
-                // Loading state
-                <div className="flex items-center justify-center py-20">
-                  <div className="text-center">
-                    <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-gray-300 border-t-[#927194] dark:border-zinc-700 dark:border-t-[#D08F90] mb-4" />
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Searching...
-                    </p>
-                  </div>
-                </div>
-              ) : hasResults ? (
-                // Search Results
-                <div className="space-y-8">
-                  {/* Collections Section */}
+                  )}
+
+                  {/* Collections Column */}
                   {collections.length > 0 && (
                     <div>
-                      <div className="flex items-center gap-2 mb-4">
+                      <div className="flex items-center gap-2 mb-6">
                         <Folder size={20} className="text-[#927194] dark:text-[#D08F90]" />
                         <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                          Collections ({collections.length})
+                          Collections
                         </h3>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {collections.map((collection: ShopifyCollection) => (
-                          <Link
-                            key={collection.id}
-                            href={`/collections/${collection.handle}`}
-                            onClick={() => setIsFocused(false)}
-                            className="flex items-center gap-3 p-4 rounded-xl hover:bg-gray-50 dark:hover:bg-zinc-800 transition-all border border-transparent hover:border-gray-200 dark:hover:border-zinc-700 group"
-                          >
-                            {collection.image && (
-                              <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-gray-100 dark:bg-zinc-800 shrink-0">
-                                <Image
-                                  src={collection.image.url}
-                                  alt={collection.image.altText || collection.title}
-                                  fill
-                                  className="object-cover"
-                                />
-                              </div>
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 dark:text-white group-hover:text-[#927194] dark:group-hover:text-[#D08F90] transition-colors">
-                                {collection.title}
-                              </p>
-                              {collection.description && (
-                                <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1 mt-1">
-                                  {collection.description}
-                                </p>
-                              )}
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Products Section */}
-                  {products.length > 0 && (
-                    <div>
-                      <div className="flex items-center gap-2 mb-4">
-                        <Package size={20} className="text-[#927194] dark:text-[#D08F90]" />
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                          Products ({products.length})
-                        </h3>
-                      </div>
-                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        {products.slice(0, 8).map((product: ShopifyProduct) => {
-                          const imageUrl = product.images.edges[0]?.node.url;
-                          const price = parseFloat(product.priceRange.minVariantPrice.amount);
+                      <div className="space-y-4">
+                        {collections.map((collection: ShopifyCollection) => {
+                          const imageUrl = collection.image?.url;
 
                           return (
                             <Link
-                              key={product.id}
-                              href={`/products/${product.handle}`}
+                              key={collection.id}
+                              href={`/collections/${collection.handle}`}
                               onClick={() => setIsFocused(false)}
-                              className="group"
+                              className="flex gap-4 p-4 rounded-xl hover:bg-gray-50 dark:hover:bg-zinc-800 transition-all group border border-transparent hover:border-gray-200 dark:hover:border-zinc-700"
                             >
-                              <div className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-zinc-800 mb-3">
-                                {imageUrl && (
+                              {imageUrl && (
+                                <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-gray-100 dark:bg-zinc-800 flex-shrink-0">
                                   <Image
                                     src={imageUrl}
-                                    alt={product.title}
+                                    alt={collection.title}
                                     fill
                                     className="object-cover group-hover:scale-105 transition-transform duration-300"
                                   />
+                                </div>
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-1 group-hover:text-[#927194] dark:group-hover:text-[#D08F90] transition-colors">
+                                  {collection.title}
+                                </h4>
+                                {collection.description && (
+                                  <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                                    {collection.description}
+                                  </p>
                                 )}
                               </div>
-                              <p className="text-sm font-medium text-gray-900 dark:text-white line-clamp-2 mb-1 min-h-[40px]">
-                                {product.title}
-                              </p>
-                              {product.productType && (
-                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                                  {product.productType}
-                                </p>
-                              )}
-                              <p className="text-sm font-semibold text-[#927194] dark:text-[#D08F90]">
-                                {new Intl.NumberFormat("en-US", {
-                                  style: "currency",
-                                  currency: product.priceRange.minVariantPrice.currencyCode,
-                                }).format(price)}
-                              </p>
                             </Link>
                           );
                         })}
                       </div>
-
-                      {/* View All Results Link */}
-                      <Link
-                        href={`/search?q=${encodeURIComponent(query)}`}
-                        onClick={() => setIsFocused(false)}
-                        className="block mt-6 p-4 text-center text-base font-medium text-white bg-[#927194] hover:bg-[#7d5f7e] dark:bg-[#D08F90] dark:hover:bg-[#c07e7f] rounded-xl transition-colors"
-                      >
-                        View all results for &quot;{query}&quot;
-                      </Link>
                     </div>
                   )}
                 </div>
-              ) : similarProducts.length > 0 ? (
-                // Similar products (spelling suggestions)
-                <div className="text-center">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-yellow-100 dark:bg-yellow-900/30 mb-4">
-                    <Lightbulb className="text-yellow-600 dark:text-yellow-500" size={24} />
-                  </div>
+              )}
+
+              {/* No Results */}
+              {!isLoadingProducts && !isLoadingCollections && !hasResults && (
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <Search size={64} className="text-gray-300 dark:text-zinc-700 mb-6" />
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                    No exact matches found
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-8">
-                    Here are some similar products you might like
-                  </p>
-
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
-                    {similarProducts.map((product: ShopifyProduct) => {
-                      const imageUrl = product.images.edges[0]?.node.url;
-                      const price = parseFloat(product.priceRange.minVariantPrice.amount);
-
-                      return (
-                        <Link
-                          key={product.id}
-                          href={`/products/${product.handle}`}
-                          onClick={() => setIsFocused(false)}
-                          className="group"
-                        >
-                          <div className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-zinc-800 mb-3">
-                            {imageUrl && (
-                              <Image
-                                src={imageUrl}
-                                alt={product.title}
-                                fill
-                                className="object-cover group-hover:scale-105 transition-transform duration-300"
-                              />
-                            )}
-                          </div>
-                          <p className="text-sm font-medium text-gray-900 dark:text-white line-clamp-2 mb-1 min-h-[40px]">
-                            {product.title}
-                          </p>
-                          {product.productType && (
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                              {product.productType}
-                            </p>
-                          )}
-                          <p className="text-sm font-semibold text-[#927194] dark:text-[#D08F90]">
-                            {new Intl.NumberFormat("en-US", {
-                              style: "currency",
-                              currency: product.priceRange.minVariantPrice.currencyCode,
-                            }).format(price)}
-                          </p>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-              ) : (
-                // No results
-                <div className="text-center py-20">
-                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 dark:bg-zinc-800 mb-6">
-                    <Search className="text-gray-400 dark:text-zinc-600" size={32} />
-                  </div>
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                     No results found
                   </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-8">
-                    Try searching with different keywords
+                  <p className="text-gray-600 dark:text-gray-400 mb-8">
+                    We couldn't find anything matching "{debouncedQuery}"
                   </p>
-                  <Link
-                    href="/shop"
-                    onClick={() => setIsFocused(false)}
-                    className="inline-block px-6 py-3 text-base font-medium text-white bg-[#927194] hover:bg-[#7d5f7e] dark:bg-[#D08F90] dark:hover:bg-[#c07e7f] rounded-xl transition-colors"
-                  >
-                    Browse All Products
-                  </Link>
+                  <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                    <Lightbulb size={16} />
+                    <span>Try searching with different keywords</span>
+                  </div>
                 </div>
               )}
             </div>

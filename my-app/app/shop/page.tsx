@@ -116,19 +116,36 @@ export default function ShopPage() {
             );
           } else if (selectedCategory === "accessories") {
             // Match stickers, buttons, and other accessories
-            // EXCLUDE if it's a shirt or sweatshirt
-            const isShirt = productType.includes("shirt") || productType.includes("tee") || productType.includes("t-shirt");
-            const isSweatshirt = productType.includes("sweatshirt") || productType.includes("hoodie") || productType.includes("pullover");
+            // EXCLUDE if it's a shirt or sweatshirt (check both productType AND title)
+            const isShirt =
+              productType.includes("shirt") ||
+              productType.includes("tee") ||
+              productType.includes("t-shirt") ||
+              title.includes("shirt") ||
+              title.includes("tee") ||
+              title.includes("t-shirt");
 
+            const isSweatshirt =
+              productType.includes("sweatshirt") ||
+              productType.includes("hoodie") ||
+              productType.includes("pullover") ||
+              title.includes("sweatshirt") ||
+              title.includes("hoodie") ||
+              title.includes("pullover");
+
+            // If it's apparel, exclude it from accessories
             if (isShirt || isSweatshirt) return false;
 
+            // Only include items that are explicitly accessories
             return (
               productType.includes("sticker") ||
               productType.includes("button") ||
               productType.includes("pin") ||
               productType.includes("accessory") ||
               productType.includes("accessori") ||
-              (!productType && (title.includes("sticker") || title.includes("button") || title.includes("pin")))
+              title.includes("sticker") ||
+              title.includes("button") ||
+              title.includes("pin")
             );
           }
           return false;
@@ -200,7 +217,7 @@ export default function ShopPage() {
 
         {/* Products Grid */}
         {filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6 lg:gap-8">
             {filteredProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}

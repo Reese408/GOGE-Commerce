@@ -73,7 +73,7 @@ function CartSidebarContent() {
 
   const handleCheckout = useCallback(() => {
     closeCart();
-    router.push("/checkout");
+    router.push("/review");
   }, [closeCart, router]);
 
   return (
@@ -318,7 +318,7 @@ function CartSidebarContent() {
                   onClick={handleCheckout}
                   className="w-full bg-[#927194] hover:bg-[#927194]/90 text-white"
                 >
-                  Proceed to Checkout
+                  Review Order
                 </Button>
               </div>
             )}

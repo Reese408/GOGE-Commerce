@@ -23,7 +23,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
+  // Exclude MainLayout (header/footer) from checkout and review pages
   const isCheckoutPage = pathname?.startsWith("/checkout");
+  const isReviewPage = pathname?.startsWith("/review");
+  const excludeMainLayout = isCheckoutPage || isReviewPage;
 
   return (
     <html lang="en">
@@ -36,7 +39,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {isCheckoutPage ? children : <MainLayout>{children}</MainLayout>}
+          {excludeMainLayout ? children : <MainLayout>{children}</MainLayout>}
           <Toaster
             position="top-center"
             richColors

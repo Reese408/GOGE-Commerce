@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
-import { ChevronLeft, ChevronRight, Pause, Play, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -46,7 +46,6 @@ export function FeaturedSlideshow() {
   const [isPaused, setIsPaused] = useState(false);
   const [direction, setDirection] = useState(0);
   const [progress, setProgress] = useState(0);
-  const [imageLoading, setImageLoading] = useState(true);
 
   const AUTO_ADVANCE_TIME = 5000; // 5 seconds
 
@@ -54,21 +53,18 @@ export function FeaturedSlideshow() {
     setDirection(1);
     setCurrentSlide((prev) => (prev + 1) % slides.length);
     setProgress(0); // Reset progress when changing slides
-    setImageLoading(true); // Reset image loading state
   }, []);
 
   const prevSlide = useCallback(() => {
     setDirection(-1);
     setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
     setProgress(0); // Reset progress when changing slides
-    setImageLoading(true); // Reset image loading state
   }, []);
 
   const goToSlide = useCallback((index: number) => {
     setDirection(index > currentSlide ? 1 : -1);
     setCurrentSlide(index);
     setProgress(0); // Reset progress when changing slides
-    setImageLoading(true); // Reset image loading state
   }, [currentSlide]);
 
   // Progress bar animation
@@ -135,20 +131,12 @@ export function FeaturedSlideshow() {
             >
               {/* Full Width Image Background */}
               <div className="absolute inset-0">
-                {imageLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-gray-900 z-10">
-                    <Loader2 className="w-12 h-12 text-white animate-spin" />
-                  </div>
-                )}
                 <Image
                   src={slide.image}
                   alt={slide.title}
                   fill
-                  className={`object-cover transition-opacity duration-500 ${
-                    imageLoading ? "opacity-0" : "opacity-100"
-                  }`}
+                  className="object-cover"
                   sizes="100vw"
-                  onLoad={() => setImageLoading(false)}
                   priority
                 />
                 {/* Overlay for better text readability */}
