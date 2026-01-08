@@ -142,7 +142,7 @@ export function ProductCard({ product, featured = false }: ProductCardProps) {
             )}
 
             {/* Quick Add Overlay - Shows on Hover */}
-            {product.variants && product.variants.length > 0 && (
+            {product.variants && product.variants.length > 0 && product.variants[0].title !== "Default Title" ? (
               <div className="absolute inset-x-0 bottom-0 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-sm p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
                 <p className="text-xs text-gray-600 dark:text-gray-400 mb-2 text-center font-medium">
                   Quick Add
@@ -172,6 +172,19 @@ export function ProductCard({ product, featured = false }: ProductCardProps) {
                     );
                   })}
                 </div>
+              </div>
+            ) : (
+              <div className="absolute inset-x-0 bottom-0 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-sm p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                <AddToCartButton
+                  product={{
+                    id: product.id,
+                    handle: product.handle,
+                    title: product.title,
+                    price: product.price,
+                    currencyCode: product.currencyCode,
+                    imageUrl: product.imageUrl,
+                  }}
+                />
               </div>
             )}
           </div>

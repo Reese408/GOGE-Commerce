@@ -66,9 +66,9 @@ export function FounderCard({
       viewport={{ once: true }}
       className="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl overflow-hidden max-w-4xl mx-auto"
     >
-      <div className="grid md:grid-cols-5 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-0 md:gap-8">
         {/* Image Section */}
-        <div className="md:col-span-2 relative h-80 md:h-auto bg-gradient-to-br from-[#927194] to-[#D08F90]">
+        <div className="md:col-span-2 relative h-96 sm:h-[500px] md:h-auto bg-gradient-to-br from-[#927194] to-[#D08F90]">
           <div className="relative w-full h-full">
             <Image
               src={imageSrc}
@@ -81,17 +81,17 @@ export function FounderCard({
         </div>
 
         {/* Content Section */}
-        <div className="md:col-span-3 p-8 flex flex-col justify-between">
+        <div className="md:col-span-3 p-6 sm:p-8 flex flex-col justify-between">
           {/* Header */}
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
                 {name}
               </h2>
-              <p className="text-lg font-semibold text-[#927194] dark:text-[#D08F90]">
+              <p className="text-base sm:text-lg font-semibold text-[#927194] dark:text-[#D08F90]">
                 {title}
               </p>
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-3 text-gray-600 dark:text-gray-400">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-3 text-sm sm:text-base text-gray-600 dark:text-gray-400">
                 <span className="flex items-center gap-2">
                   🎓 {university}
                 </span>
@@ -103,17 +103,17 @@ export function FounderCard({
             </div>
 
             {/* Bio */}
-            <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+            <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed">
               {bio}
             </p>
           </div>
 
           {/* Social Links */}
-          <div className="mt-8 pt-6 border-t border-gray-200 dark:border-zinc-700">
-            <p className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-4">
+          <div className="mt-6 sm:mt-8 pt-6 border-t border-gray-200 dark:border-zinc-700">
+            <p className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3 sm:mb-4">
               Connect with Amanda
             </p>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-2 sm:gap-3">
               {socialLinks.map((social) => (
                 <a
                   key={social.name}

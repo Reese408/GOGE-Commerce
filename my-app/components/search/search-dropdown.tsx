@@ -135,19 +135,10 @@ function SearchDropdownContent({ placeholder = "Search products..." }: SearchDro
   }, [query, allProductsData]);
 
   const products = useMemo(() => {
-    console.log('[SearchDropdown] productsData:', productsData);
-    console.log('[SearchDropdown] productsData type:', typeof productsData);
-    console.log('[SearchDropdown] productsData is Array:', Array.isArray(productsData));
-    console.log('[SearchDropdown] productsData length:', productsData?.length);
-    if (productsData && productsData.length > 0) {
-      console.log('[SearchDropdown] First product:', productsData[0]);
-    }
     return Array.isArray(productsData) ? productsData : [];
   }, [productsData]);
 
   const collections = useMemo(() => {
-    console.log('[SearchDropdown] collectionsData:', collectionsData);
-    console.log('[SearchDropdown] collectionsData is Array:', Array.isArray(collectionsData));
     return Array.isArray(collectionsData) ? collectionsData : [];
   }, [collectionsData]);
 
@@ -173,6 +164,44 @@ function SearchDropdownContent({ placeholder = "Search products..." }: SearchDro
     inputRef.current?.blur();
   }, []);
 
+  // Lock body scroll when search is active
+  useEffect(() => {
+    if (isFocused) {
+      // Save current scroll position
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+      document.body.style.overflow = 'hidden';
+
+      return () => {
+        // Restore scroll position
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        document.body.style.overflow = '';
+        window.scrollTo(0, scrollY);
+      };
+    }
+  }, [isFocused]);
+
+  // Handle Escape key to close search
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isFocused) {
+        setIsFocused(false);
+        setQuery("");
+        setDebouncedQuery("");
+        inputRef.current?.blur();
+      }
+    };
+
+    if (isFocused) {
+      document.addEventListener("keydown", handleEscape);
+      return () => document.removeEventListener("keydown", handleEscape);
+    }
+  }, [isFocused]);
+
   // Click outside to close (desktop only)
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -192,21 +221,7 @@ function SearchDropdownContent({ placeholder = "Search products..." }: SearchDro
     }
   }, [isFocused]);
 
-  const showDropdown = isFocused && debouncedQuery.length > 0;
   const hasResults = products.length > 0 || collections.length > 0;
-
-  // Debug logging
-  console.log('[SearchDropdown] State:', {
-    isFocused,
-    query,
-    debouncedQuery,
-    showDropdown,
-    hasResults,
-    productsCount: products.length,
-    collectionsCount: collections.length,
-    isLoadingProducts,
-    isLoadingCollections
-  });
 
   // Lock body scroll when mobile search is open
   useEffect(() => {
