@@ -17,7 +17,7 @@ export default function AboutPage() {
       <AboutHero />
 
       {/* Story Section */}
-      <section className="py-12 sm:py-16 md:py-20 bg-white dark:bg-zinc-950">
+      <section id="story" className="py-12 sm:py-16 md:py-20 bg-white dark:bg-zinc-950 scroll-mt-20">
         <div className="container mx-auto px-4 sm:px-6 md:px-8 max-w-4xl">
           <div className="prose prose-base sm:prose-lg dark:prose-invert mx-auto">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-6 sm:mb-8 text-gray-900 dark:text-white">
@@ -37,7 +37,7 @@ export default function AboutPage() {
       <MissionSection />
 
       {/* Founder Section */}
-      <section className="py-12 sm:py-16 md:py-20 bg-white dark:bg-zinc-950">
+      <section id="founder" className="py-12 sm:py-16 md:py-20 bg-white dark:bg-zinc-950 scroll-mt-20">
         <div className="container mx-auto px-4 sm:px-6 md:px-8">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-8 sm:mb-10 md:mb-12 text-gray-900 dark:text-white">
             Meet the Founder

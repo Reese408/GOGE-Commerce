@@ -78,8 +78,17 @@ export function ContactForm({ onSuccess }: ContactFormProps) {
     setIsSubmitting(true);
 
     try {
-      // TODO: Replace with actual contact form API endpoint
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send message");
+      }
 
       setFormData({
         name: "",
@@ -92,6 +101,7 @@ export function ContactForm({ onSuccess }: ContactFormProps) {
       onSuccess();
     } catch (error) {
       console.error("Form submission error:", error);
+      alert("Failed to send message. Please try again or email us directly at graceogoing@gmail.com");
     } finally {
       setIsSubmitting(false);
     }
