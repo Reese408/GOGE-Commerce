@@ -36,6 +36,10 @@ export const S3_VIDEOS_URL = `${S3_BASE_URL}/videos`;
 
 // S3 Image Paths
 export const LOGO_URL = `${S3_IMAGES_URL}/logos/logo1.png`;
+export const LOGO2_URL = `${S3_IMAGES_URL}/logos/logo2.jpeg`;
 export const SLIDESHOW_IMAGE_1_URL = `${S3_IMAGES_URL}/slideimages/image1.jpeg`;
 export const SLIDESHOW_IMAGE_2_URL = `${S3_IMAGES_URL}/slideimages/image2.jpeg`;
 export const FOUNDER_PROFILE_URL = `${S3_IMAGES_URL}/profile/amanda-profile.jpg`;
+
+// S3 Video Paths
+export const ABOUT_VIDEO_URL = `${S3_VIDEOS_URL}/hero/video.mp4`;

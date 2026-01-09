@@ -13,38 +13,52 @@ export function VideoIntro({ videoSrc, posterSrc }: VideoIntroProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
-  const [isInView, setIsInView] = useState(false);
 
   // Auto-play when video comes into view
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsInView(entry.isIntersecting);
-        if (entry.isIntersecting && videoRef.current) {
-          videoRef.current.play();
-          setIsPlaying(true);
-        }
-      },
-      { threshold: 0.5 }
-    );
+    useEffect(() => {
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (!videoRef.current) return;
 
-    if (videoRef.current) {
-      observer.observe(videoRef.current);
-    }
+          if (entry.isIntersecting) {
+            videoRef.current
+              .play()
+              .then(() => setIsPlaying(true))
+              .catch(() => {});
+          } else {
+            videoRef.current.pause();
+            setIsPlaying(false);
+          }
+        },
+        { threshold: 0.5 }
+      );
 
-    return () => observer.disconnect();
-  }, []);
-
-  const togglePlay = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
+      if (videoRef.current) {
+        observer.observe(videoRef.current);
       }
-      setIsPlaying(!isPlaying);
-    }
-  };
+
+      return () => observer.disconnect();
+    }, []);
+
+
+
+    const togglePlay = async () => {
+      const video = videoRef.current;
+      if (!video) return;
+
+      try {
+        if (video.paused) {
+          if (video.readyState < 2) return; // not enough data yet
+          await video.play();
+          setIsPlaying(true);
+        } else {
+          video.pause();
+          setIsPlaying(false);
+        }
+      } catch {
+        // media not ready or unsupported
+      }
+    };
 
   const toggleMute = () => {
     if (videoRef.current) {
@@ -60,13 +74,15 @@ export function VideoIntro({ videoSrc, posterSrc }: VideoIntroProps) {
         ref={videoRef}
         className="absolute inset-0 w-full h-full object-cover"
         src={videoSrc}
-        poster={posterSrc}
+        poster={posterSrc || undefined}
         loop
         muted={isMuted}
         playsInline
+        preload="auto"
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
       />
+
 
       {/* Dark overlay for text readability */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60" />

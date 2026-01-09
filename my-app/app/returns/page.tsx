@@ -32,7 +32,7 @@ Date of this report: ${new Date().toLocaleDateString()}
     `.trim();
 
     // Open email client with pre-filled data
-    window.location.href = `mailto:support@graceongoing.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = `mailto:graceogoing@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
     // Show success message
     setIsSubmitted(true);
@@ -268,10 +268,10 @@ Date of this report: ${new Date().toLocaleDateString()}
                       Email
                     </p>
                     <a
-                      href="mailto:support@graceongoing.com"
+                      href="mailto:graceogoing@gmail.com"
                       className="text-[#927194] hover:underline text-sm"
                     >
-                      support@graceongoing.com
+                      graceogoing@gmail.com
                     </a>
                   </div>
                 </div>

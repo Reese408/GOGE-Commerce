@@ -105,14 +105,14 @@ export default function TrackOrderPage() {
           </h3>
 
           <div className="grid sm:grid-cols-2 gap-4">
-            <Link href="mailto:support@graceongoing.com" className="block">
+            <Link href="mailto:graceogoing@gmail.com" className="block">
               <div className="bg-white dark:bg-zinc-900 rounded-lg p-6 border border-gray-200 dark:border-zinc-800 hover:border-[#927194] transition-all hover:shadow-lg cursor-pointer h-full">
                 <Mail className="text-[#927194] mb-3" size={24} />
                 <h4 className="font-semibold mb-2 text-gray-900 dark:text-white">
                   Email Support
                 </h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  support@graceongoing.com
+                  graceogoing@gmail.com
                 </p>
               </div>
             </Link>
@@ -136,8 +136,8 @@ export default function TrackOrderPage() {
               <strong className="text-gray-900 dark:text-white">Didn't receive a tracking email?</strong>
               <br />
               Check your spam folder or contact us at{" "}
-              <a href="mailto:support@graceongoing.com" className="text-[#927194] hover:underline">
-                support@graceongoing.com
+              <a href="mailto:graceogoing@gmail.com" className="text-[#927194] hover:underline">
+                graceogoing@gmail.com
               </a>
             </p>
           </div>

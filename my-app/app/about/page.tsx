@@ -3,14 +3,15 @@ import { FounderCard } from "@/components/about/founder-card";
 import { MissionSection } from "@/components/about/mission-section";
 import { VideoIntro } from "@/components/about/video-intro";
 import { FOUNDER_PROFILE_URL } from "@/lib/config";
+import { ABOUT_VIDEO_URL, LOGO2_URL } from "@/lib/config";
 
 export default function AboutPage() {
   return (
     <div>
       {/* Video Intro - Upload your video to /public/videos/making-process.mp4 */}
       <VideoIntro
-        videoSrc="/videos/making-process.mp4"
-        posterSrc="/videos/making-process-poster.jpg"
+        videoSrc={ABOUT_VIDEO_URL}
+        posterSrc={LOGO2_URL}
       />
 
       <AboutHero />

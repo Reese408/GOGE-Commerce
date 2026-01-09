@@ -58,8 +58,8 @@ export default function ReturnPolicyPage() {
               <strong className="text-gray-900 dark:text-white">To report a damaged or defective item, email us at:</strong>
             </p>
             <div className="bg-white/60 dark:bg-zinc-900/60 rounded-lg p-4 mb-4">
-              <a href="mailto:support@graceongoing.com" className="text-lg font-semibold text-[#927194] hover:underline">
-                support@graceongoing.com
+              <a href="mailto:graceogoing@gmail.com" className="text-lg font-semibold text-[#927194] hover:underline">
+                graceogoing@gmail.com
               </a>
             </div>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
@@ -113,17 +113,10 @@ export default function ReturnPolicyPage() {
             <div className="space-y-3 text-gray-700 dark:text-gray-300">
               <p>
                 📧 <strong>Email:</strong>{" "}
-                <a href="mailto:support@graceongoing.com" className="text-[#927194] hover:underline">
-                  support@graceongoing.com
+                <a href="mailto:graceogoing@gmail.com" className="text-[#927194] hover:underline">
+                  graceogoing@gmail.com
                 </a>
               </p>
-              <p>
-                📞 <strong>Phone:</strong>{" "}
-                <a href="tel:1-800-GRACE-GO" className="text-[#927194] hover:underline">
-                  1-800-GRACE-GO
-                </a>
-              </p>
-              <p>💬 <strong>Live Chat:</strong> Mon-Fri, 9am-5pm EST</p>
             </div>
           </div>
 
