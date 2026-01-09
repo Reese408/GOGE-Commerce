@@ -9,6 +9,7 @@ import { ProductCard } from "@/components/products/product-card";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import type { ShopifyProduct, ShopifyCollection, ProductCardData } from "@/lib/types";
 
 interface SearchResultsProps {
   query: string;
@@ -19,34 +20,29 @@ export function SearchResults({ query }: SearchResultsProps) {
   const { products, collections, isLoading, isError } = useSearch(query, query.length > 0);
 
   // Convert ShopifyProduct to ProductCardData
-const productCards = products.map((product) => {
-  const firstVariant = product.variants?.edges?.[0]?.node;
-  const firstImage = product.images?.edges?.[0]?.node;
+  const productCards: ProductCardData[] = products.map((product: ShopifyProduct) => {
+    const firstVariant = product.variants?.edges?.[0]?.node;
+    const firstImage = product.images?.edges?.[0]?.node;
 
-  return {
-    id: firstVariant?.id ?? product.id,
-    variantId: firstVariant?.id,
-
-    handle: product.handle,
-    title: product.title,
-    description: product.description,
-
-    price: firstVariant?.price
-      ? parseFloat(firstVariant.price.amount)
-      : parseFloat(product.priceRange.minVariantPrice.amount),
-
-    currencyCode:
-      firstVariant?.price?.currencyCode ??
-      product.priceRange.minVariantPrice.currencyCode,
-
-    imageUrl: firstImage?.url ?? "/placeholder.png",
-
-    availableForSale:
-      firstVariant?.availableForSale ?? product.availableForSale,
-  };
-});
-
-
+    return {
+      id: firstVariant?.id ?? product.id,
+      handle: product.handle,
+      title: product.title,
+      description: product.description,
+      price: firstVariant?.price
+        ? parseFloat(firstVariant.price.amount)
+        : parseFloat(product.priceRange.minVariantPrice.amount),
+      currencyCode:
+        firstVariant?.price?.currencyCode ??
+        product.priceRange.minVariantPrice.currencyCode,
+      imageUrl: firstImage?.url ?? "/placeholder.png",
+      availableForSale:
+        firstVariant?.availableForSale ?? product.availableForSale,
+      quantityAvailable: firstVariant?.quantityAvailable,
+      variants: product.variants?.edges.map((edge) => edge.node),
+      productType: product.productType,
+    };
+  });
 
   const hasResults = productCards.length > 0 || collections.length > 0;
 
@@ -145,7 +141,7 @@ const productCards = products.map((product) => {
             Collections ({collections.length})
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {collections.map((collection) => (
+            {collections.map((collection: ShopifyCollection) => (
               <Link
                 key={collection.id}
                 href={`/collections/${collection.handle}`}
@@ -187,7 +183,7 @@ const productCards = products.map((product) => {
             Products ({productCards.length})
           </h2>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-1">
-            {productCards.map((product) => (
+            {productCards.map((product: ProductCardData) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>

@@ -172,6 +172,7 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
                     <AddToCartButton
                       product={{
                         id: product.id,
+                        handle: product.handle,
                         title: product.title,
                         price: product.price,
                         currencyCode: product.currencyCode,
