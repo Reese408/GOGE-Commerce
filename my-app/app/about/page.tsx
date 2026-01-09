@@ -2,6 +2,7 @@ import { AboutHero } from "@/components/about/about-hero";
 import { FounderCard } from "@/components/about/founder-card";
 import { MissionSection } from "@/components/about/mission-section";
 import { VideoIntro } from "@/components/about/video-intro";
+import { FOUNDER_PROFILE_URL } from "@/lib/config";
 
 export default function AboutPage() {
   return (
@@ -42,15 +43,15 @@ export default function AboutPage() {
           </h2>
 
           <FounderCard
-            imageSrc="/Amanda-ProfilePic.jpg"
-            imageAlt="Amanda Kolar - Founder of Grace, Ongoing"
+            imageSrc={FOUNDER_PROFILE_URL}
+            imageAlt="Amanda Kolar - Founder and Designer of Grace, Ongoing, wearing faith-inspired apparel"
             name="Amanda Kolar"
             title="Founder & Designer"
             university="Ashland University - Graphic Design & Marketing"
             sport="Ashland Softball Player"
             bio="Amanda is a senior at Ashland University, majoring in Graphic Design and Marketing. With a bold faith in the Lord Jesus Christ, she founded Grace, Ongoing to spread God's love and positive messages through thoughtfully designed, handmade products. When she's not creating designs, you can find her on the softball field representing Ashland University."
             socials={{
-              instagram: "https://instagram.com/graceongoing", // UPDATE with real links
+              instagram: "https://instagram.com/graceongoing", 
               x: "https://x.com/graceongoing",
               facebook: "https://facebook.com/graceongoing",
               linkedin: "https://linkedin.com/in/amandakolar",

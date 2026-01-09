@@ -11,9 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ShopifyProduct, ShopifyCollection } from "@/lib/types";
 import { ALL_PRODUCTS_QUERY } from "@/lib/queries";
 import { SearchErrorBoundary } from "@/components/error-boundary";
-
-const SHOPIFY_DOMAIN = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
-const SHOPIFY_ACCESS_TOKEN = process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_TOKEN;
+import { SHOPIFY_API_VERSION, SHOPIFY_STORE_DOMAIN, SHOPIFY_STOREFRONT_TOKEN, POPULAR_SEARCHES } from "@/lib/config";
 
 interface SearchDropdownProps {
   placeholder?: string;
@@ -42,13 +40,8 @@ function calculateSimilarity(str1: string, str2: string): number {
   return 0;
 }
 
-// Popular/suggested search terms - customize these based on your store
-const SUGGESTED_SEARCHES = [
-  "Shirts",
-  "Buttons",
-  "Hoodies",
-  "Stickers",
-];
+// Popular/suggested search terms imported from config
+const SUGGESTED_SEARCHES = POPULAR_SEARCHES;
 
 function SearchDropdownContent({ placeholder = "Search products..." }: SearchDropdownProps) {
   const router = useRouter();
@@ -87,11 +80,11 @@ function SearchDropdownContent({ placeholder = "Search products..." }: SearchDro
   const { data: allProductsResponse } = useQuery({
     queryKey: ["all-products-search"],
     queryFn: async () => {
-      const response = await fetch(`https://${SHOPIFY_DOMAIN}/api/2024-01/graphql.json`, {
+      const response = await fetch(`https://${SHOPIFY_STORE_DOMAIN}/api/${SHOPIFY_API_VERSION}/graphql.json`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Shopify-Storefront-Access-Token": SHOPIFY_ACCESS_TOKEN!,
+          "X-Shopify-Storefront-Access-Token": SHOPIFY_STOREFRONT_TOKEN,
         },
         body: JSON.stringify({
           query: ALL_PRODUCTS_QUERY,
@@ -455,6 +448,9 @@ function SearchDropdownContent({ placeholder = "Search products..." }: SearchDro
             <button
               type="button"
               onClick={handleClear}
+              onMouseDown={(e) => {
+                e.preventDefault(); // Prevent input blur
+              }}
               className="absolute right-3 text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors"
               aria-label="Clear search"
             >

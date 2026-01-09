@@ -12,6 +12,7 @@ import { CartSidebar } from "@/components/cart/cart-sidebar";
 import { QueryProvider } from "@/lib/providers/query-provider";
 import { Footer } from "@/components/layout-page/footer";
 import { Search } from "lucide-react";
+import { LOGO_URL } from "@/lib/config";
 
 // Lazy load heavy components for better performance
 const SearchDropdown = lazy(() =>
@@ -43,8 +44,8 @@ export function MainLayout({ children }: MainLayoutProps) {
           >
             {!logoError ? (
               <Image
-                src="/Logo1-removebg-preview.png"
-                alt="Grace Ongoing"
+                src={LOGO_URL}
+                alt="Grace, Ongoing - Faith-inspired apparel and accessories"
                 width={360}
                 height={120}
                 priority
@@ -53,7 +54,7 @@ export function MainLayout({ children }: MainLayoutProps) {
               />
             ) : (
               <span className="text-xl lg:text-2xl font-bold bg-linear-to-r from-[#927194] via-[#D08F90] to-[#A0B094] bg-clip-text text-transparent">
-                Grace Ongoing
+                Grace, Ongoing
               </span>
             )}
           </Link>

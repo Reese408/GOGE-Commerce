@@ -5,9 +5,7 @@ import { SEARCH_PRODUCTS_QUERY, SEARCH_COLLECTIONS_QUERY } from "@/lib/queries";
 import { ShopifyProduct, ShopifyCollection } from "@/lib/types";
 import Fuse from "fuse.js";
 import { validateSearchQuery } from "@/lib/utils/input-validation";
-
-const SHOPIFY_DOMAIN = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
-const SHOPIFY_ACCESS_TOKEN = process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_TOKEN;
+import { SHOPIFY_API_VERSION, SHOPIFY_STORE_DOMAIN, SHOPIFY_STOREFRONT_TOKEN } from "@/lib/config";
 
 // Fuzzy matching utility for typos and spelling mistakes
 function fuzzyMatchScore(searchTerm: string, target: string): number {
@@ -69,11 +67,11 @@ async function searchProducts(query: string, first: number = 50) {
 
   const searchQuery = searchParts;
 
-  const response = await fetch(`https://${SHOPIFY_DOMAIN}/api/2025-01/graphql.json`, {
+  const response = await fetch(`https://${SHOPIFY_STORE_DOMAIN}/api/${SHOPIFY_API_VERSION}/graphql.json`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-Shopify-Storefront-Access-Token": SHOPIFY_ACCESS_TOKEN!,
+      "X-Shopify-Storefront-Access-Token": SHOPIFY_STOREFRONT_TOKEN!,
     },
     body: JSON.stringify({
       query: SEARCH_PRODUCTS_QUERY,
@@ -137,11 +135,11 @@ async function searchCollections(query: string, first: number = 3) {
   // Format query for Shopify search - add wildcards for partial matching
   const searchQuery = `title:*${validatedQuery}*`;
 
-  const response = await fetch(`https://${SHOPIFY_DOMAIN}/api/2025-01/graphql.json`, {
+  const response = await fetch(`https://${SHOPIFY_STORE_DOMAIN}/api/${SHOPIFY_API_VERSION}/graphql.json`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-Shopify-Storefront-Access-Token": SHOPIFY_ACCESS_TOKEN!,
+      "X-Shopify-Storefront-Access-Token": SHOPIFY_STOREFRONT_TOKEN!,
     },
     body: JSON.stringify({
       query: SEARCH_COLLECTIONS_QUERY,

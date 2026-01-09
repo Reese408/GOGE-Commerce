@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Search, Package, X } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useSearch } from "@/lib/hooks/use-search";
 import { ProductCard } from "@/components/products/product-card";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -151,11 +152,13 @@ const productCards = products.map((product) => {
                 className="group bg-white dark:bg-zinc-900 rounded-xl p-6 border border-gray-200 dark:border-zinc-800 hover:border-[#927194] transition-all hover:shadow-lg"
               >
                 {collection.image && (
-                  <div className="aspect-video rounded-lg overflow-hidden mb-4 bg-gray-100 dark:bg-zinc-800">
-                    <img
+                  <div className="relative aspect-video rounded-lg overflow-hidden mb-4 bg-gray-100 dark:bg-zinc-800">
+                    <Image
                       src={collection.image.url}
-                      alt={collection.image.altText || collection.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      alt={collection.image.altText || `${collection.title} collection`}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     />
                   </div>
                 )}

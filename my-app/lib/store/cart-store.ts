@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { CartItem as CartItemType } from "../types";
 import { toast } from "sonner";
+import { FREE_SHIPPING_THRESHOLD } from "@/lib/config";
 
 export type CartItem = CartItemType;
 
@@ -174,14 +175,12 @@ export const useCartStore = create<CartStore>()(
       },
 
       getRemainingForFreeShipping: () => {
-        const FREE_SHIPPING_THRESHOLD = 75;
         const subtotal = get().totalPrice();
         const remaining = FREE_SHIPPING_THRESHOLD - subtotal;
         return remaining > 0 ? remaining : 0;
       },
 
       qualifiesForFreeShipping: () => {
-        const FREE_SHIPPING_THRESHOLD = 75;
         return get().totalPrice() >= FREE_SHIPPING_THRESHOLD;
       },
     }),

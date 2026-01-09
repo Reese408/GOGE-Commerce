@@ -4,6 +4,7 @@ import { ProductCard } from "@/components/products/product-card";
 import { useCollections } from "@/lib/hooks/use-collections";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Sparkles } from "lucide-react";
+import Image from "next/image";
 import { ShopifyCollection, ShopifyProduct, ProductCardData } from "@/lib/types";
 
 // Transform ShopifyProduct to ProductCardData format
@@ -149,11 +150,13 @@ export default function CollectionsPage() {
                     className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#927194]/5 to-[#D08F90]/5 border border-gray-200 dark:border-zinc-800 hover:shadow-xl transition-all duration-300"
                   >
                     {collection.image && (
-                      <div className="aspect-video overflow-hidden">
-                        <img
+                      <div className="relative aspect-video overflow-hidden">
+                        <Image
                           src={collection.image.url}
-                          alt={collection.image.altText || collection.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          alt={collection.image.altText || `${collection.title} collection - Browse faith-inspired products`}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                         />
                       </div>
                     )}

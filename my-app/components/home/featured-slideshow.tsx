@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { SLIDESHOW_IMAGE_1_URL, SLIDESHOW_IMAGE_2_URL } from "@/lib/config";
 
 interface Slide {
   id: number;
@@ -23,7 +24,7 @@ const slides: Slide[] = [
     id: 1,
     title: "Faith-Inspired Apparel",
     description: "Wear your faith with pride. Premium quality designs that inspire.",
-    image: "/SlideImage.jpeg",
+    image: SLIDESHOW_IMAGE_1_URL,
     imagePosition: "left",
     ctaText: "Shop Now",
     ctaLink: "/shop",
@@ -33,7 +34,7 @@ const slides: Slide[] = [
     id: 2,
     title: "New Collection",
     description: "Discover our latest faith-based designs for every season.",
-    image: "/SlideImage-1.jpeg",
+    image: SLIDESHOW_IMAGE_2_URL,
     imagePosition: "right",
     ctaText: "Explore",
     ctaLink: "/shop",
@@ -133,7 +134,7 @@ export function FeaturedSlideshow() {
               <div className="absolute inset-0">
                 <Image
                   src={slide.image}
-                  alt={slide.title}
+                  alt={`${slide.title} - ${slide.description}`}
                   fill
                   className="object-cover"
                   sizes="100vw"
