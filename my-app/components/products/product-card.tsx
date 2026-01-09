@@ -12,9 +12,10 @@ import type { ProductCardData } from "@/lib/types";
 interface ProductCardProps {
   product: ProductCardData;
   featured?: boolean;
+  priority?: boolean;
 }
 
-export function ProductCard({ product, featured = false }: ProductCardProps) {
+export function ProductCard({ product, featured = false, priority = false }: ProductCardProps) {
   const { items } = useCartStore();
   const [hoveredVariantId, setHoveredVariantId] = useState<string | null>(null);
   const [imageLoading, setImageLoading] = useState(true);
@@ -45,7 +46,7 @@ export function ProductCard({ product, featured = false }: ProductCardProps) {
               }`}
               sizes="(max-width: 1024px) 100vw, 50vw"
               onLoad={() => setImageLoading(false)}
-              priority
+              priority={priority || featured}
             />
           </div>
         )}
@@ -133,6 +134,7 @@ export function ProductCard({ product, featured = false }: ProductCardProps) {
               }`}
               sizes="(max-width: 768px) 50vw, 25vw"
               onLoad={() => setImageLoading(false)}
+              priority={priority}
             />
 
             {!product.availableForSale && (

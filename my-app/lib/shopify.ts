@@ -8,9 +8,11 @@ const SHOPIFY_API_VERSION = "2025-10";
 export async function shopifyFetch<T>({
   query,
   variables,
+  retryCount = 0,
 }: {
   query: string;
   variables?: Record<string, any>;
+  retryCount?: number;
 }): Promise<T> {
   const res = await fetch(`https://${domain}/api/${SHOPIFY_API_VERSION}/graphql.json`, {
     method: "POST",
@@ -21,6 +23,28 @@ export async function shopifyFetch<T>({
     body: JSON.stringify({ query, variables }),
     next: { revalidate: 60 }, // cache for 60s
   });
+
+  // Check rate limit headers
+  const throttleStatus = res.headers.get('X-Shopify-Shop-Api-Call-Limit');
+  if (throttleStatus) {
+    const [current, max] = throttleStatus.split('/').map(Number);
+    // Log warning if approaching rate limit (80% threshold)
+    if (current / max > 0.8) {
+      console.warn(`Shopify API rate limit warning: ${current}/${max} calls used`);
+    }
+  }
+
+  // Handle rate limiting (429 Too Many Requests)
+  if (res.status === 429) {
+    if (retryCount < 3) {
+      const retryAfter = parseInt(res.headers.get('Retry-After') || '2', 10);
+      const delay = Math.min(retryAfter * 1000, 10000); // Max 10s delay
+      console.warn(`Rate limited. Retrying after ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return shopifyFetch({ query, variables, retryCount: retryCount + 1 });
+    }
+    throw new Error('Shopify API rate limit exceeded after retries');
+  }
 
   // Check for HTTP errors (network issues, invalid credentials, etc.)
   if (!res.ok) {

@@ -28,7 +28,7 @@ const nextConfig: NextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.shopify.com",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: https://cdn.shopify.com",
+              "img-src 'self' data: blob: https://cdn.shopify.com https://grace-ongoing-media.s3.us-east-2.amazonaws.com",
               "font-src 'self' data:",
               "connect-src 'self' https://*.myshopify.com https://cdn.shopify.com",
               "frame-src 'self' https://*.myshopify.com",
