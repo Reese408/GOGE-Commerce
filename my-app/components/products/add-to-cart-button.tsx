@@ -98,11 +98,19 @@ export function AddToCartButton({ product, size, disabled = false, variant }: Ad
     );
   }
 
+  const isDisabled = disabled || allStockInCart;
+
   return (
     <Button
       size="lg"
       onClick={handleAddToCart}
-      className="w-full bg-[#927194] hover:bg-[#927194]/90 text-white transition-all duration-300"
+      disabled={isDisabled}
+      className={`w-full transition-all duration-300 ${
+        isDisabled
+          ? "bg-gray-400 dark:bg-zinc-700 cursor-not-allowed opacity-50"
+          : "bg-[#927194] hover:bg-[#927194]/90"
+      } text-white`}
+      title={allStockInCart ? "All available stock in cart" : disabled ? "Out of stock" : ""}
     >
       <motion.div
         className="flex items-center justify-center gap-2"
@@ -117,7 +125,7 @@ export function AddToCartButton({ product, size, disabled = false, variant }: Ad
         ) : (
           <>
             <ShoppingCart size={20} />
-            Add to Cart
+            {isDisabled ? "Out of Stock" : "Add to Cart"}
           </>
         )}
       </motion.div>

@@ -145,36 +145,49 @@ export function ProductCard({ product, featured = false, priority = false }: Pro
 
             {/* Quick Add Overlay - Shows on Hover */}
             {product.variants && product.variants.length > 0 && product.variants[0].title !== "Default Title" ? (
-              <div className="absolute inset-x-0 bottom-0 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-sm p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                <p className="text-xs text-gray-600 dark:text-gray-400 mb-2 text-center font-medium">
-                  Quick Add
-                </p>
-                <div className="flex gap-1 justify-center flex-wrap">
-                  {product.variants.map((variant) => {
-                    const sizeOption = variant.selectedOptions.find(opt => opt.name === "Size");
-                    const size = sizeOption?.value || variant.title;
-                    const quantityAvailable = variant.quantityAvailable ?? 0;
-                    const isAvailable = variant.availableForSale && quantityAvailable > 0;
+              (() => {
+                // Check if all variants are sold out
+                const allVariantsSoldOut = product.variants.every(variant => {
+                  const quantityAvailable = variant.quantityAvailable ?? 0;
+                  return !variant.availableForSale || quantityAvailable === 0;
+                });
 
-                    return (
-                      <AddToCartButton
-                        key={variant.id}
-                        product={{
-                          id: variant.id,
-                          handle: product.handle,
-                          title: product.title,
-                          price: parseFloat(variant.price.amount),
-                          currencyCode: variant.price.currencyCode,
-                          imageUrl: product.imageUrl,
-                        }}
-                        size={size}
-                        disabled={!isAvailable}
-                        variant={variant}
-                      />
-                    );
-                  })}
-                </div>
-              </div>
+                // Don't show Quick Add if all variants are sold out
+                if (allVariantsSoldOut) return null;
+
+                return (
+                  <div className="absolute inset-x-0 bottom-0 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-sm p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-2 text-center font-medium">
+                      Quick Add
+                    </p>
+                    <div className="flex gap-1 justify-center flex-wrap">
+                      {product.variants.map((variant) => {
+                        const sizeOption = variant.selectedOptions.find(opt => opt.name === "Size");
+                        const size = sizeOption?.value || variant.title;
+                        const quantityAvailable = variant.quantityAvailable ?? 0;
+                        const isAvailable = variant.availableForSale && quantityAvailable > 0;
+
+                        return (
+                          <AddToCartButton
+                            key={variant.id}
+                            product={{
+                              id: variant.id,
+                              handle: product.handle,
+                              title: product.title,
+                              price: parseFloat(variant.price.amount),
+                              currencyCode: variant.price.currencyCode,
+                              imageUrl: product.imageUrl,
+                            }}
+                            size={size}
+                            disabled={!isAvailable}
+                            variant={variant}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()
             ) : (
               <div className="absolute inset-x-0 bottom-0 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-sm p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
                 <AddToCartButton
@@ -185,6 +198,18 @@ export function ProductCard({ product, featured = false, priority = false }: Pro
                     price: product.price,
                     currencyCode: product.currencyCode,
                     imageUrl: product.imageUrl,
+                  }}
+                  disabled={!product.availableForSale}
+                  variant={{
+                    id: product.id,
+                    title: product.title,
+                    quantityAvailable: product.quantityAvailable ?? 0,
+                    availableForSale: product.availableForSale,
+                    price: {
+                      amount: product.price.toString(),
+                      currencyCode: product.currencyCode,
+                    },
+                    selectedOptions: [],
                   }}
                 />
               </div>

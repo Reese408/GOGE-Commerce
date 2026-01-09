@@ -15,19 +15,22 @@ async function fetchProducts(count: number = 10): Promise<ProductCardData[]> {
     const image = product.images.edges[0]?.node;
     const price = parseFloat(product.priceRange.minVariantPrice.amount);
     // Get the first variant ID (default variant) for checkout
-    const variantId = product.variants?.edges[0]?.node?.id || product.id;
+    const firstVariant = product.variants?.edges[0]?.node;
+    const variantId = firstVariant?.id || product.id;
+    const quantityAvailable = firstVariant?.quantityAvailable ?? 0;
     // Map variants
     const variants = product.variants?.edges.map(({ node }) => node) || [];
 
     return {
-      id: variantId, 
-      handle: product.handle, 
+      id: variantId,
+      handle: product.handle,
       title: product.title,
       description: product.description,
       price: price,
       currencyCode: product.priceRange.minVariantPrice.currencyCode,
       imageUrl: image?.url,
       availableForSale: product.availableForSale,
+      quantityAvailable: quantityAvailable,
       variants: variants,
       productType: product.productType,
     };

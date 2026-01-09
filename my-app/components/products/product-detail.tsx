@@ -303,27 +303,41 @@ export function ProductDetail({ productId }: ProductDetailProps) {
 
             {/* Add to Cart */}
             <div className="space-y-4 pt-4">
-              <Button
-                size="lg"
-                onClick={handleAddToCart}
-                disabled={!selectedVariant?.availableForSale}
-                className="w-full bg-[#927194] hover:bg-[#927194]/90 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {added ? (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="flex items-center gap-2"
+              {(() => {
+                // Check if user has all available stock in cart
+                const itemInCart = items.find((item) => item.id === selectedVariant?.id);
+                const quantityInCart = itemInCart?.quantity ?? 0;
+                const quantityAvailable = selectedVariant?.quantityAvailable ?? 0;
+                const allStockInCart = quantityAvailable > 0 && quantityInCart >= quantityAvailable;
+                const isDisabled = !selectedVariant?.availableForSale || allStockInCart;
+
+                return (
+                  <Button
+                    size="lg"
+                    onClick={handleAddToCart}
+                    disabled={isDisabled}
+                    className="w-full bg-[#927194] hover:bg-[#927194]/90 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    title={allStockInCart ? "All available stock in cart" : ""}
                   >
-                    <Check size={20} />
-                    Added to Cart!
-                  </motion.div>
-                ) : selectedVariant?.availableForSale ? (
-                  "Add to Cart"
-                ) : (
-                  "Out of Stock"
-                )}
-              </Button>
+                    {added ? (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="flex items-center gap-2"
+                      >
+                        <Check size={20} />
+                        Added to Cart!
+                      </motion.div>
+                    ) : allStockInCart ? (
+                      "All Stock in Cart"
+                    ) : selectedVariant?.availableForSale ? (
+                      "Add to Cart"
+                    ) : (
+                      "Out of Stock"
+                    )}
+                  </Button>
+                );
+              })()}
               <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
                 Free shipping on orders over $75
               </p>

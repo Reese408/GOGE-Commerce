@@ -7,10 +7,9 @@ import { Heart, Instagram, Facebook, Twitter } from "lucide-react";
 const footerLinks = {
   shop: [
     { label: "All Products", href: "/shop" },
-    { label: "T-Shirts", href: "/shop/t-shirts" },
-    { label: "Hoodies", href: "/shop/hoodies" },
-    { label: "Accessories", href: "/shop/accessories" },
-    { label: "Stickers", href: "/shop/stickers" },
+    { label: "T-Shirts", href: "/shop?category=shirts" },
+    { label: "Hoodies", href: "/shop?category=sweatshirts" },
+    { label: "Accessories", href: "/shop?category=accessories" },
   ],
   about: [
     { label: "Our Story", href: "/about" },
@@ -21,7 +20,7 @@ const footerLinks = {
     { label: "Track Order", href: "/track-order" },
     { label: "Returns & Exchanges", href: "/returns" },
     { label: "Return Policy", href: "/return-policy" },
-    { label: "Contact Us", href: "mailto:support@graceongoing.com" },
+    { label: "Contact Us", href: "/contact" },
   ],
 };
 

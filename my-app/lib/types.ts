@@ -93,6 +93,7 @@ export interface ProductCardData {
   currencyCode: string;
   imageUrl?: string;
   availableForSale: boolean;
+  quantityAvailable?: number;
   variants?: ProductVariant[];
   productType?: string;
 }
