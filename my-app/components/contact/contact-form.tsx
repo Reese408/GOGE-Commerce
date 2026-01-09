@@ -101,7 +101,7 @@ export function ContactForm({ onSuccess }: ContactFormProps) {
       onSuccess();
     } catch (error) {
       console.error("Form submission error:", error);
-      alert("Failed to send message. Please try again or email us directly at graceogoing@gmail.com");
+      alert("Failed to send message. Please try again later or refresh the page.");
     } finally {
       setIsSubmitting(false);
     }

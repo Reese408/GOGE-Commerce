@@ -1,6 +1,6 @@
 "use client";
 
-import { Mail, Instagram, MapPin, type LucideIcon } from "lucide-react";
+import { Instagram, MapPin, type LucideIcon } from "lucide-react";
 
 interface ContactInfoItem {
   icon: LucideIcon;
@@ -10,12 +10,6 @@ interface ContactInfoItem {
 }
 
 const contactInfo: ContactInfoItem[] = [
-  {
-    icon: Mail,
-    label: "Email",
-    value: "graceogoing@gmail.com",
-    href: "mailto:graceogoing@gmail.com",
-  },
   {
     icon: Instagram,
     label: "Instagram",

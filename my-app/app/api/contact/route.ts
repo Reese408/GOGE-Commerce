@@ -1,27 +1,119 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Validate environment variables at module load
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const CONTACT_EMAIL_RECIPIENT = process.env.EMAIL_TO || process.env.CONTACT_EMAIL_RECIPIENT || "graceogoing@gmail.com";
+const CONTACT_EMAIL_FROM = process.env.EMAIL_FROM || process.env.CONTACT_EMAIL_FROM || "Grace Ongoing Contact Form <onboarding@resend.dev>";
+
+if (!RESEND_API_KEY) {
+  console.error("FATAL: RESEND_API_KEY environment variable is not set");
+}
+
+const resend = new Resend(RESEND_API_KEY);
+
+// Email validation regex (RFC 5322 simplified)
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Sanitize HTML to prevent XSS
+function escapeHtml(unsafe: string): string {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+// Validate and sanitize input
+function validateInput(data: {
+  name: string;
+  email: string;
+  phone?: string;
+  subject: string;
+  message: string;
+}): { valid: boolean; error?: string } {
+  // Name validation
+  if (!data.name || typeof data.name !== "string") {
+    return { valid: false, error: "Name is required" };
+  }
+  if (data.name.trim().length < 2 || data.name.trim().length > 100) {
+    return { valid: false, error: "Name must be between 2 and 100 characters" };
+  }
+
+  // Email validation
+  if (!data.email || typeof data.email !== "string") {
+    return { valid: false, error: "Email is required" };
+  }
+  if (!EMAIL_REGEX.test(data.email.trim())) {
+    return { valid: false, error: "Invalid email address" };
+  }
+  if (data.email.length > 254) {
+    return { valid: false, error: "Email address too long" };
+  }
+
+  // Phone validation (optional)
+  if (data.phone && typeof data.phone === "string" && data.phone.length > 50) {
+    return { valid: false, error: "Phone number too long" };
+  }
+
+  // Subject validation
+  if (!data.subject || typeof data.subject !== "string") {
+    return { valid: false, error: "Subject is required" };
+  }
+  if (data.subject.trim().length < 3 || data.subject.trim().length > 200) {
+    return { valid: false, error: "Subject must be between 3 and 200 characters" };
+  }
+
+  // Message validation
+  if (!data.message || typeof data.message !== "string") {
+    return { valid: false, error: "Message is required" };
+  }
+  if (data.message.trim().length < 10 || data.message.trim().length > 5000) {
+    return { valid: false, error: "Message must be between 10 and 5000 characters" };
+  }
+
+  return { valid: true };
+}
 
 export async function POST(req: NextRequest) {
+  // Check API key exists
+  if (!RESEND_API_KEY) {
+    console.error("Contact form submission failed: RESEND_API_KEY not configured");
+    return NextResponse.json(
+      { error: "Email service not configured. Please contact support." },
+      { status: 503 }
+    );
+  }
+
   try {
     const body = await req.json();
     const { name, email, phone, subject, message } = body;
 
-    // Validate required fields
-    if (!name || !email || !subject || !message) {
+    // Validate input
+    const validation = validateInput({ name, email, phone, subject, message });
+    if (!validation.valid) {
+      console.warn("Contact form validation failed:", validation.error);
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: validation.error },
         { status: 400 }
       );
     }
 
-    // Send email using Resend
-    const data = await resend.emails.send({
-      from: "Grace Ongoing Contact Form <onboarding@resend.dev>", // Will use Resend's test domain until you verify your domain
-      to: ["reeseredman099@gmail.com"], // IMPORTANT: On free tier, must match your Resend signup email. Change to graceogoing@gmail.com after domain verification.
-      replyTo: email, // User's email so you can reply directly
-      subject: `Contact Form: ${subject}`,
+    // Sanitize all user inputs for HTML
+    const sanitizedName = escapeHtml(name.trim());
+    const sanitizedEmail = escapeHtml(email.trim().toLowerCase());
+    const sanitizedPhone = phone ? escapeHtml(phone.trim()) : null;
+    const sanitizedSubject = escapeHtml(subject.trim());
+    const sanitizedMessage = escapeHtml(message.trim());
+
+    // SECURITY: Never use user input as 'from' - always use our domain
+    // replyTo is safe because it's just metadata, not the sender
+    const emailData = {
+      from: CONTACT_EMAIL_FROM,
+      to: [CONTACT_EMAIL_RECIPIENT],
+      replyTo: sanitizedEmail, // User's email for easy replies
+      subject: `Contact Form: ${sanitizedSubject}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -44,7 +136,7 @@ export async function POST(req: NextRequest) {
                       <strong style="color: #666;">Name:</strong>
                     </td>
                     <td style="padding: 10px 0; border-bottom: 1px solid #e0e0e0;">
-                      ${name}
+                      ${sanitizedName}
                     </td>
                   </tr>
                   <tr>
@@ -52,16 +144,16 @@ export async function POST(req: NextRequest) {
                       <strong style="color: #666;">Email:</strong>
                     </td>
                     <td style="padding: 10px 0; border-bottom: 1px solid #e0e0e0;">
-                      <a href="mailto:${email}" style="color: #927194; text-decoration: none;">${email}</a>
+                      <a href="mailto:${sanitizedEmail}" style="color: #927194; text-decoration: none;">${sanitizedEmail}</a>
                     </td>
                   </tr>
-                  ${phone ? `
+                  ${sanitizedPhone ? `
                   <tr>
                     <td style="padding: 10px 0; border-bottom: 1px solid #e0e0e0;">
                       <strong style="color: #666;">Phone:</strong>
                     </td>
                     <td style="padding: 10px 0; border-bottom: 1px solid #e0e0e0;">
-                      ${phone}
+                      ${sanitizedPhone}
                     </td>
                   </tr>
                   ` : ''}
@@ -70,7 +162,7 @@ export async function POST(req: NextRequest) {
                       <strong style="color: #666;">Subject:</strong>
                     </td>
                     <td style="padding: 10px 0;">
-                      ${subject}
+                      ${sanitizedSubject}
                     </td>
                   </tr>
                 </table>
@@ -78,12 +170,12 @@ export async function POST(req: NextRequest) {
 
               <div style="background: white; padding: 20px; border-radius: 8px;">
                 <h2 style="color: #927194; margin-top: 0; font-size: 18px;">Message</h2>
-                <p style="margin: 0; white-space: pre-wrap; line-height: 1.6;">${message}</p>
+                <p style="margin: 0; white-space: pre-wrap; line-height: 1.6;">${sanitizedMessage}</p>
               </div>
 
               <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-left: 4px solid #927194; border-radius: 4px;">
                 <p style="margin: 0; font-size: 14px; color: #666;">
-                  <strong>💡 Tip:</strong> Click "Reply" to respond directly to ${email}
+                  <strong>💡 Tip:</strong> Click "Reply" to respond directly to ${sanitizedEmail}
                 </p>
               </div>
             </div>
@@ -94,16 +186,52 @@ export async function POST(req: NextRequest) {
           </body>
         </html>
       `,
-    });
+    };
+
+    // Log email attempt (production-safe - no secrets)
+    console.log(`Sending contact form email to ${CONTACT_EMAIL_RECIPIENT} from ${sanitizedEmail}`);
+
+    const data = await resend.emails.send(emailData);
+
+    // Check for Resend API errors
+    if (data.error) {
+      console.error("Resend API error:", {
+        name: data.error.name,
+        message: data.error.message,
+        // Don't log full error object to avoid leaking sensitive data
+      });
+
+      return NextResponse.json(
+        { error: "Failed to send email. Please try again later or contact us directly." },
+        { status: 500 }
+      );
+    }
+
+    // Success logging
+    console.log(`Contact form email sent successfully. ID: ${data.data?.id || 'unknown'}`);
 
     return NextResponse.json(
-      { message: "Email sent successfully", data },
+      {
+        message: "Email sent successfully",
+        // Don't send back the full Resend response to avoid leaking data
+        success: true
+      },
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error sending email:", error);
+    // Log the error safely
+    if (error instanceof Error) {
+      console.error("Contact form error:", {
+        message: error.message,
+        name: error.name,
+        // Don't log stack trace in production to avoid info leakage
+      });
+    } else {
+      console.error("Contact form unknown error:", String(error));
+    }
+
     return NextResponse.json(
-      { error: "Failed to send email" },
+      { error: "An unexpected error occurred. Please try again later." },
       { status: 500 }
     );
   }

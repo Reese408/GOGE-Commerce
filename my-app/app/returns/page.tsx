@@ -17,22 +17,8 @@ export default function ReturnsPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Build email body for damaged/defective items
-    const subject = `Damaged/Defective Item Report - Order ${formData.orderNumber}`;
-    const body = `
-Order Number: ${formData.orderNumber}
-Email: ${formData.email}
-
-Issue Description:
-${formData.issueDescription}
-
-I have attached photos of the damaged/defective item and can provide additional information if needed.
-
-Date of this report: ${new Date().toLocaleDateString()}
-    `.trim();
-
-    // Open email client with pre-filled data
-    window.location.href = `mailto:graceogoing@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    // Redirect to contact page
+    window.location.href = '/contact';
 
     // Show success message
     setIsSubmitted(true);
@@ -265,13 +251,13 @@ Date of this report: ${new Date().toLocaleDateString()}
                   <Mail className="text-[#927194] mt-1" size={20} />
                   <div>
                     <p className="font-medium text-gray-900 dark:text-white">
-                      Email
+                      Contact Form
                     </p>
                     <a
-                      href="mailto:graceogoing@gmail.com"
+                      href="/contact"
                       className="text-[#927194] hover:underline text-sm"
                     >
-                      graceogoing@gmail.com
+                      Send us a message
                     </a>
                   </div>
                 </div>

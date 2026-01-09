@@ -55,11 +55,11 @@ export default function ReturnPolicyPage() {
               While we cannot accept returns for change of mind, we absolutely stand behind the quality of our products. If you receive a damaged or defective item, please contact us immediately.
             </p>
             <p className="text-gray-700 dark:text-gray-300 mb-4">
-              <strong className="text-gray-900 dark:text-white">To report a damaged or defective item, email us at:</strong>
+              <strong className="text-gray-900 dark:text-white">To report a damaged or defective item:</strong>
             </p>
             <div className="bg-white/60 dark:bg-zinc-900/60 rounded-lg p-4 mb-4">
-              <a href="mailto:graceogoing@gmail.com" className="text-lg font-semibold text-[#927194] hover:underline">
-                graceogoing@gmail.com
+              <a href="/contact" className="text-lg font-semibold text-[#927194] hover:underline">
+                Contact Us
               </a>
             </div>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
@@ -112,9 +112,9 @@ export default function ReturnPolicyPage() {
             </p>
             <div className="space-y-3 text-gray-700 dark:text-gray-300">
               <p>
-                📧 <strong>Email:</strong>{" "}
-                <a href="mailto:graceogoing@gmail.com" className="text-[#927194] hover:underline">
-                  graceogoing@gmail.com
+                💬 <strong>Contact:</strong>{" "}
+                <a href="/contact" className="text-[#927194] hover:underline">
+                  Send us a message
                 </a>
               </p>
             </div>

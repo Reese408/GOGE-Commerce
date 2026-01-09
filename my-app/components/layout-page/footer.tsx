@@ -12,7 +12,7 @@ const footerLinks = {
     { label: "Accessories", href: "/shop?category=accessories" },
   ],
   about: [
-    { label: "Our Story", href: "/about" },
+    { label: "Our Story", href: "/about#story" },
     { label: "Meet Amanda", href: "/about#founder" },
     { label: "Mission & Values", href: "/about#mission" },
   ],
