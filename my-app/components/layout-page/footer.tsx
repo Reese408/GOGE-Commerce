@@ -169,20 +169,6 @@ export function Footer() {
                 App powered by Shopify
               </p>
             </div>
-            <div className="flex items-center gap-6">
-              <Link
-                href="/privacy"
-                className="text-sm text-gray-600 dark:text-gray-400 hover:text-[#927194] dark:hover:text-[#D08F90] transition-colors"
-              >
-                Privacy Policy
-              </Link>
-              <Link
-                href="/terms"
-                className="text-sm text-gray-600 dark:text-gray-400 hover:text-[#927194] dark:hover:text-[#D08F90] transition-colors"
-              >
-                Terms of Service
-              </Link>
-            </div>
           </div>
         </motion.div>
       </div>

@@ -1,6 +1,31 @@
-import type { Product, WithContext } from "schema-dts";
-
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://graceongoing.com";
+
+type StructuredDataProduct = {
+  "@context": string;
+  "@type": string;
+  "@id": string;
+  name: string;
+  description: string;
+  image: string;
+  url: string;
+  sku: string;
+  brand: {
+    "@type": string;
+    name: string;
+  };
+  offers: {
+    "@type": string;
+    url: string;
+    priceCurrency: string;
+    price: string;
+    availability: string;
+    seller: {
+      "@type": string;
+      name: string;
+      url: string;
+    };
+  };
+};
 
 export function generateProductSchema(product: {
   id: string;
@@ -12,7 +37,7 @@ export function generateProductSchema(product: {
   imageUrl?: string;
   availableForSale: boolean;
   brand?: string;
-}): WithContext<Product> {
+}): StructuredDataProduct {
   return {
     "@context": "https://schema.org",
     "@type": "Product",

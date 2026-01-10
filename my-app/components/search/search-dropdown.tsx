@@ -202,21 +202,24 @@ function SearchDropdownContent({ placeholder = "Search products..." }: SearchDro
       const scrollY = window.scrollY;
       const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
 
-      // Apply scroll lock
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
+      // Apply scroll lock - use overflow hidden instead of position fixed
+      // This prevents the scroll position issue with fixed overlays
       document.body.style.overflow = 'hidden';
       document.body.style.paddingRight = `${scrollbarWidth}px`;
 
+      // Store scroll position for restoration
+      document.body.dataset.scrollY = scrollY.toString();
+
       return () => {
         // Restore scroll position and styles
-        document.body.style.position = '';
-        document.body.style.top = '';
-        document.body.style.width = '';
+        const savedScrollY = parseInt(document.body.dataset.scrollY || '0', 10);
         document.body.style.overflow = '';
         document.body.style.paddingRight = '';
-        window.scrollTo(0, scrollY);
+        delete document.body.dataset.scrollY;
+        // Only scroll if we actually moved
+        if (Math.abs(window.scrollY - savedScrollY) > 5) {
+          window.scrollTo(0, savedScrollY);
+        }
       };
     }
   }, [isFocused]);
@@ -224,17 +227,17 @@ function SearchDropdownContent({ placeholder = "Search products..." }: SearchDro
   // Safety cleanup: Always restore scroll on unmount
   useEffect(() => {
     return () => {
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
       document.body.style.overflow = '';
       document.body.style.paddingRight = '';
+      if (document.body.dataset.scrollY) {
+        delete document.body.dataset.scrollY;
+      }
     };
   }, []);
 
   // Mobile search overlay content
   const mobileSearchOverlay = isFocused && mounted ? (
-    <div className="lg:hidden fixed inset-0 z-9999 bg-white dark:bg-zinc-900 flex flex-col">
+    <div className="lg:hidden fixed inset-0 z-[9999] bg-white dark:bg-zinc-900 flex flex-col">
           {/* Mobile Search Header */}
           <div className="flex items-center gap-3 p-4 border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
             <div className="flex-1 relative">

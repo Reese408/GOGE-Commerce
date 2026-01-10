@@ -261,33 +261,6 @@ export default function ReturnsPage() {
                     </a>
                   </div>
                 </div>
-
-                <div className="flex items-start gap-3">
-                  <Phone className="text-[#927194] mt-1" size={20} />
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-white">
-                      Phone
-                    </p>
-                    <a
-                      href="tel:1-800-GRACE-GO"
-                      className="text-[#927194] hover:underline text-sm"
-                    >
-                      1-800-GRACE-GO
-                    </a>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <MessageSquare className="text-[#927194] mt-1" size={20} />
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-white">
-                      Live Chat
-                    </p>
-                    <p className="text-gray-600 dark:text-gray-400 text-sm">
-                      Mon-Fri, 9am-5pm EST
-                    </p>
-                  </div>
-                </div>
               </div>
             </motion.div>
 
