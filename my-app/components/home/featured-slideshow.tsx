@@ -185,17 +185,17 @@ export function FeaturedSlideshow() {
           {/* Navigation Arrows */}
           <button
             onClick={prevSlide}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/90 dark:bg-zinc-800/80 hover:bg-white dark:hover:bg-zinc-800 transition-all shadow-lg"
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/90 dark:bg-zinc-800/90 hover:bg-white dark:hover:bg-zinc-800 transition-all shadow-lg backdrop-blur-sm"
             aria-label="Previous slide"
           >
-            <ChevronLeft className="text-white" size={24} />
+            <ChevronLeft className="text-gray-900 dark:text-white" size={24} />
           </button>
           <button
             onClick={nextSlide}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/90 dark:bg-zinc-800/80 hover:bg-white dark:hover:bg-zinc-800 transition-all shadow-lg"
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/90 dark:bg-zinc-800/90 hover:bg-white dark:hover:bg-zinc-800 transition-all shadow-lg backdrop-blur-sm"
             aria-label="Next slide"
           >
-            <ChevronRight className="text-white" size={24} />
+            <ChevronRight className="text-gray-900 dark:text-white" size={24} />
           </button>
 
           {/* Play/Pause Button with Progress Ring */}

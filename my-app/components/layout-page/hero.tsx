@@ -8,50 +8,60 @@ import Link from "next/link";
 
 export function Hero() {
   const [mounted, setMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
-  // Only enable scroll animations AFTER hydration
+  // Detect mobile and enable animations only after hydration
   useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
     setMounted(true);
+
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   const { scrollY } = useScroll();
 
+  // Disable scroll animations on mobile to prevent jank
   const opacity = useTransform(
     scrollY,
     [0, 300],
-    mounted ? [1, 0] : [1, 1]
+    (!mounted || isMobile) ? [1, 1] : [1, 0]
   );
 
   const scale = useTransform(
     scrollY,
     [0, 300],
-    mounted ? [1, 0.9] : [1, 1]
+    (!mounted || isMobile) ? [1, 1] : [1, 0.9]
   );
 
   const y = useTransform(
     scrollY,
     [0, 300],
-    mounted ? [0, -50] : [0, 0]
+    (!mounted || isMobile) ? [0, 0] : [0, -50]
   );
 
   return (
     <motion.section
-      style={{ opacity, scale }}
+      style={isMobile ? {} : { opacity, scale }}
       className="relative h-[100svh] flex items-center justify-center overflow-hidden
       bg-gradient-to-br from-[#F9F4C8] via-[#E8CFA9] to-[#D08F90]
       dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-800"
     >
-      {/* Background Orbs */}
+      {/* Background Orbs - Reduced animation complexity on mobile */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
-          animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }}
+          animate={isMobile ? {} : { scale: [1, 1.2, 1], rotate: [0, 90, 0] }}
           transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
           className="absolute -top-1/2 -left-1/2 w-full h-full
           bg-gradient-to-br from-[#927194]/30 to-transparent
           rounded-full blur-3xl"
         />
         <motion.div
-          animate={{ scale: [1.2, 1, 1.2], rotate: [90, 0, 90] }}
+          animate={isMobile ? {} : { scale: [1.2, 1, 1.2], rotate: [90, 0, 90] }}
           transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
           className="absolute -bottom-1/2 -right-1/2 w-full h-full
           bg-gradient-to-tl from-[#A0B094]/30 to-transparent
@@ -61,14 +71,10 @@ export function Hero() {
 
       {/* Hero Content */}
       <motion.div
-        style={{ y }}
+        style={isMobile ? {} : { y }}
         className="relative z-10 container mx-auto px-6 text-center"
       >
-        <motion.div
-          initial={false} // 🔑 IMPORTANT
-          animate={{ opacity: 1 }}
-          className="space-y-8"
-        >
+        <div className="space-y-8">
           {/* Badge */}
           <span className="inline-block px-4 py-2
             bg-white/20 dark:bg-white/10 backdrop-blur
@@ -122,7 +128,7 @@ export function Hero() {
               <ArrowDown size={24} />
             </motion.div>
           </div>
-        </motion.div>
+        </div>
       </motion.div>
 
       {/* Bottom fade */}

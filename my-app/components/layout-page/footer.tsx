@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Heart, Instagram, Facebook, Twitter } from "lucide-react";
+import { Instagram, Facebook } from "lucide-react";
 
 const footerLinks = {
   shop: [
@@ -159,16 +159,13 @@ export function Footer() {
           transition={{ delay: 0.5, duration: 0.5 }}
           className="mt-12 pt-8 border-t border-gray-200 dark:border-zinc-800"
         >
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="text-center md:text-left">
-              <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-center md:justify-start gap-2">
-                © {new Date().getFullYear()} Grace, Ongoing LLC. Made with{" "}
-                <Heart size={14} className="text-[#D08F90] fill-current" /> by Amanda Kolar
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                App powered by Shopify
-              </p>
-            </div>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              © {new Date().getFullYear()} Grace, Ongoing LLC
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-500">
+              Powered by Shopify
+            </p>
           </div>
         </motion.div>
       </div>

@@ -19,7 +19,7 @@ export function AboutHero() {
             </span>
           </h1>
           <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-700 dark:text-gray-300 leading-relaxed px-4">
-            Spreading faith, love, and positive messages through handmade designs
+            There is never an end to God working in your life, but a continuation. Like a comma, God is not done with your story.
           </p>
         </motion.div>
       </div>

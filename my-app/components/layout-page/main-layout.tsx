@@ -115,12 +115,12 @@ export function MainLayout({ children }: MainLayoutProps) {
           <div className="lg:hidden pb-4">
             <Suspense
               fallback={
-                <div className="flex items-center ring-1 ring-gray-300 dark:ring-zinc-700 rounded-full bg-white dark:bg-zinc-800 px-4 py-2.5">
+                <div className="flex items-center ring-1 ring-gray-300 dark:ring-zinc-700 rounded-full bg-white dark:bg-zinc-800 px-4 py-3">
                   <Search
                     className="text-gray-400 dark:text-zinc-500 mr-3"
                     size={18}
                   />
-                  <span className="text-sm text-gray-400 dark:text-zinc-500">
+                  <span className="text-base text-gray-400 dark:text-zinc-500">
                     Search products...
                   </span>
                 </div>

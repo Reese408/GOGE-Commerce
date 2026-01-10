@@ -97,7 +97,7 @@ export function FounderCard({
                 </span>
                 <span className="hidden sm:inline">•</span>
                 <span className="flex items-center gap-2">
-                  ⚾ {sport}
+                  🥎 {sport}
                 </span>
               </div>
             </div>

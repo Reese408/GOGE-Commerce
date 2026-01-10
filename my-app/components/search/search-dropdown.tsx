@@ -201,11 +201,18 @@ function SearchDropdownContent({ placeholder = "Search products..." }: SearchDro
       // Save current scroll position
       const scrollY = window.scrollY;
       const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      const isMobile = window.innerWidth < 1024; // lg breakpoint
 
-      // Apply scroll lock - use overflow hidden instead of position fixed
-      // This prevents the scroll position issue with fixed overlays
+      // Apply scroll lock
       document.body.style.overflow = 'hidden';
       document.body.style.paddingRight = `${scrollbarWidth}px`;
+
+      // For mobile, use more aggressive position fixed to prevent bounce scrolling
+      if (isMobile) {
+        document.body.style.position = 'fixed';
+        document.body.style.top = `-${scrollY}px`;
+        document.body.style.width = '100%';
+      }
 
       // Store scroll position for restoration
       document.body.dataset.scrollY = scrollY.toString();
@@ -214,10 +221,14 @@ function SearchDropdownContent({ placeholder = "Search products..." }: SearchDro
         // Restore scroll position and styles
         const savedScrollY = parseInt(document.body.dataset.scrollY || '0', 10);
         document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
         document.body.style.paddingRight = '';
         delete document.body.dataset.scrollY;
-        // Only scroll if we actually moved
-        if (Math.abs(window.scrollY - savedScrollY) > 5) {
+
+        // Only restore scroll position on mobile (desktop stays in place)
+        if (isMobile) {
           window.scrollTo(0, savedScrollY);
         }
       };
@@ -228,6 +239,9 @@ function SearchDropdownContent({ placeholder = "Search products..." }: SearchDro
   useEffect(() => {
     return () => {
       document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
       document.body.style.paddingRight = '';
       if (document.body.dataset.scrollY) {
         delete document.body.dataset.scrollY;
@@ -237,7 +251,7 @@ function SearchDropdownContent({ placeholder = "Search products..." }: SearchDro
 
   // Mobile search overlay content
   const mobileSearchOverlay = isFocused && mounted ? (
-    <div className="lg:hidden fixed inset-0 z-[9999] bg-white dark:bg-zinc-900 flex flex-col">
+    <div className="lg:hidden fixed inset-0 z-[9999] bg-white dark:bg-zinc-900 flex flex-col touch-none overscroll-none">
           {/* Mobile Search Header */}
           <div className="flex items-center gap-3 p-4 border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
             <div className="flex-1 relative">
@@ -251,13 +265,13 @@ function SearchDropdownContent({ placeholder = "Search products..." }: SearchDro
                 onChange={(e) => setQuery(e.target.value)}
                 autoFocus
                 placeholder={placeholder}
-                className="w-full pl-12 pr-4 py-2.5 text-sm bg-gray-100 dark:bg-zinc-800 rounded-full outline-none text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-500"
+                className="w-full pl-12 pr-4 py-3 text-base bg-gray-100 dark:bg-zinc-800 rounded-full outline-none text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-500"
               />
             </div>
             <button
               type="button"
               onClick={handleCancel}
-              className="text-[#927194] dark:text-[#D08F90] font-medium text-sm whitespace-nowrap px-2"
+              className="text-[#927194] dark:text-[#D08F90] font-medium text-base whitespace-nowrap px-2"
             >
               Cancel
             </button>
@@ -467,10 +481,10 @@ function SearchDropdownContent({ placeholder = "Search products..." }: SearchDro
       <button
         type="button"
         onClick={() => setIsFocused(true)}
-        className="lg:hidden w-full flex items-center gap-3 px-4 py-2.5 bg-white dark:bg-zinc-800 rounded-full ring-1 ring-gray-300 dark:ring-zinc-700 text-left"
+        className="lg:hidden w-full flex items-center gap-3 px-4 py-3 bg-white dark:bg-zinc-800 rounded-full ring-1 ring-gray-300 dark:ring-zinc-700 text-left"
       >
         <Search className="text-gray-400 dark:text-zinc-500" size={18} />
-        <span className="text-sm text-gray-400 dark:text-zinc-500">{placeholder}</span>
+        <span className="text-base text-gray-400 dark:text-zinc-500">{placeholder}</span>
       </button>
 
       {/* Autocomplete Suggestions - Desktop only */}

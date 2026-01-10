@@ -60,11 +60,11 @@ export default function ReviewPage() {
           <div className="sticky top-0 z-50 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 mb-6 bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800 shadow-sm">
             <Button
               variant="ghost"
-              onClick={() => router.back()}
+              onClick={() => router.push("/")}
               className="hover:bg-gray-100 dark:hover:bg-zinc-800 font-semibold"
             >
               <ChevronLeft size={20} />
-              Back to Shop
+              Back to Home
             </Button>
           </div>
 
@@ -98,11 +98,11 @@ export default function ReviewPage() {
         <div className="sticky top-0 z-50 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 mb-6 bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800 shadow-sm">
           <Button
             variant="ghost"
-            onClick={() => router.back()}
+            onClick={() => router.push("/")}
             className="hover:bg-gray-100 dark:hover:bg-zinc-800 font-semibold"
           >
             <ChevronLeft size={20} />
-            Back to Shop
+            Back to Home
           </Button>
         </div>
 
