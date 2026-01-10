@@ -19,6 +19,7 @@ function CartSidebarContent() {
     useCartStore();
   const [loadingImages, setLoadingImages] = useState<Record<string, boolean>>(
     {}
+    
   );
 
   // Fetch products for "You May Also Like" section
