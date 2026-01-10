@@ -1,0 +1,11 @@
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Disallow admin and API routes
+Disallow: /api/
+Disallow: /checkout
+Disallow: /review
+
+# Sitemap
+Sitemap: https://graceongoing.com/sitemap.xml

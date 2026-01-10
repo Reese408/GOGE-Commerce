@@ -157,27 +157,6 @@ function SearchDropdownContent({ placeholder = "Search products..." }: SearchDro
     inputRef.current?.blur();
   }, []);
 
-  // Lock body scroll when search is active
-  useEffect(() => {
-    if (isFocused) {
-      // Save current scroll position
-      const scrollY = window.scrollY;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
-      document.body.style.overflow = 'hidden';
-
-      return () => {
-        // Restore scroll position
-        document.body.style.position = '';
-        document.body.style.top = '';
-        document.body.style.width = '';
-        document.body.style.overflow = '';
-        window.scrollTo(0, scrollY);
-      };
-    }
-  }, [isFocused]);
-
   // Handle Escape key to close search
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -216,19 +195,28 @@ function SearchDropdownContent({ placeholder = "Search products..." }: SearchDro
 
   const hasResults = products.length > 0 || collections.length > 0;
 
-  // Lock body scroll when mobile search is open
+  // Lock body scroll when search is active (mobile and desktop)
   useEffect(() => {
-    if (isFocused && window.innerWidth < 1024) { // Only on mobile
-      const originalOverflow = document.body.style.overflow;
-      const originalPaddingRight = document.body.style.paddingRight;
+    if (isFocused) {
+      // Save current scroll position
+      const scrollY = window.scrollY;
       const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
 
+      // Apply scroll lock
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
       document.body.style.overflow = 'hidden';
       document.body.style.paddingRight = `${scrollbarWidth}px`;
 
       return () => {
-        document.body.style.overflow = originalOverflow;
-        document.body.style.paddingRight = originalPaddingRight;
+        // Restore scroll position and styles
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+        window.scrollTo(0, scrollY);
       };
     }
   }, [isFocused]);
@@ -236,6 +224,9 @@ function SearchDropdownContent({ placeholder = "Search products..." }: SearchDro
   // Safety cleanup: Always restore scroll on unmount
   useEffect(() => {
     return () => {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
       document.body.style.overflow = '';
       document.body.style.paddingRight = '';
     };
