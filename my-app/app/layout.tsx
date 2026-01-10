@@ -4,6 +4,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 import { LayoutWrapper } from "@/components/layout-page/layout-wrapper";
 import { Toaster } from "sonner";
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,7 +26,7 @@ const siteDescription = "Discover curated fashion and timeless style at Grace, O
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: `${siteName} | Curated Fashion & Timeless Style`,
+    default: `${siteName} | Hand Made Christian Apparel`,
     template: `%s | ${siteName}`,
   },
   description: siteDescription,
@@ -137,6 +139,8 @@ export default function RootLayout({
             gap={8}
           />
         </ThemeProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

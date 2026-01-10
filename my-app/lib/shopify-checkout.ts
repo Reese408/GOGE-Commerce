@@ -7,6 +7,10 @@ const CREATE_CART_MUTATION = `
       cart {
         id
         checkoutUrl
+        attributes {
+          key
+          value
+        }
       }
       userErrors {
         field
@@ -36,8 +40,36 @@ interface CartCreateResponse {
   };
 }
 
+/**
+ * Gets the base URL for the storefront
+ * Works on both client and server side
+ */
+function getBaseUrl(): string {
+  if (typeof window !== 'undefined') {
+    return window.location.origin;
+  }
+  return process.env.NEXT_PUBLIC_SITE_URL || 'https://www.graceongoing.com';
+}
+
+/**
+ * Appends return URL parameters to Shopify checkout URL
+ * This is more reliable than cart attributes on Basic plan
+ */
+function appendReturnParams(checkoutUrl: string, baseUrl: string): string {
+  const url = new URL(checkoutUrl);
+  
+  // These params tell Shopify where to redirect after checkout actions
+  // Note: Not all params work on all plans, but we try them all
+  url.searchParams.set('return_to', `${baseUrl}/shop`);
+  url.searchParams.set('return_url', `${baseUrl}/shop`);
+  
+  return url.toString();
+}
+
 export async function createCheckout(lineItems: CheckoutLineItem[]) {
   try {
+    const baseUrl = getBaseUrl();
+
     const response = await shopifyFetch<CartCreateResponse>({
       query: CREATE_CART_MUTATION,
       variables: {
@@ -46,6 +78,20 @@ export async function createCheckout(lineItems: CheckoutLineItem[]) {
             merchandiseId: item.variantId,
             quantity: item.quantity,
           })),
+          // Keep attributes as backup (works on higher plans)
+          attributes: [
+            {
+              key: '_return_to',
+              value: `${baseUrl}/shop`
+            },
+            {
+              key: '_cancel_url', 
+              value: `${baseUrl}/review`
+            }
+          ],
+          buyerIdentity: {
+            countryCode: 'US'
+          }
         },
       },
     });
@@ -60,9 +106,12 @@ export async function createCheckout(lineItems: CheckoutLineItem[]) {
       throw new Error("Failed to create cart");
     }
 
+    // Append return URL params to the checkout URL
+    const enhancedCheckoutUrl = appendReturnParams(cart.checkoutUrl, baseUrl);
+
     return {
       id: cart.id,
-      webUrl: cart.checkoutUrl,
+      webUrl: enhancedCheckoutUrl,
     };
   } catch (error) {
     console.error("Error creating checkout:", error);
@@ -71,7 +120,6 @@ export async function createCheckout(lineItems: CheckoutLineItem[]) {
 }
 
 export function getCheckoutUrl(checkoutId: string): string {
-  // Extract the numeric ID from the Shopify GID
   const numericId = checkoutId.split("/").pop();
   const domain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
   return `https://${domain}/cart/${numericId}`;
@@ -79,7 +127,6 @@ export function getCheckoutUrl(checkoutId: string): string {
 
 /**
  * Redirects the browser to Shopify checkout
- * @param checkoutUrl - The Shopify checkout URL
  */
 export function redirectToCheckout(checkoutUrl: string): void {
   if (typeof window !== "undefined") {
