@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ChevronLeft, Loader2, ShoppingBag, Trash2, Plus, Minus, AlertCircle } from "lucide-react";
@@ -15,9 +15,11 @@ export default function ReviewPage() {
   const { items, totalPrice, updateQuantity, removeItem } = useCartStore();
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const subtotal = totalPrice();
+  // Memoize subtotal calculation
+  const subtotal = useMemo(() => totalPrice(), [items]);
 
-  const handleProceedToCheckout = async () => {
+  // Memoize checkout handler
+  const handleProceedToCheckout = useCallback(async () => {
     if (items.length === 0) {
       toast.error("Your cart is empty");
       return;
@@ -50,7 +52,20 @@ export default function ReviewPage() {
       );
       setIsProcessing(false);
     }
-  };
+  }, [items]);
+
+  // Memoize quantity handlers to prevent re-renders
+  const handleUpdateQuantity = useCallback((itemId: string, newQuantity: number) => {
+    updateQuantity(itemId, newQuantity);
+  }, [updateQuantity]);
+
+  const handleRemoveItem = useCallback((itemId: string) => {
+    removeItem(itemId);
+  }, [removeItem]);
+
+  const handleBackToHome = useCallback(() => {
+    router.push("/");
+  }, [router]);
 
   if (items.length === 0) {
     return (
@@ -60,7 +75,7 @@ export default function ReviewPage() {
           <div className="sticky top-0 z-50 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 mb-6 bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800 shadow-sm">
             <Button
               variant="ghost"
-              onClick={() => router.push("/")}
+              onClick={handleBackToHome}
               className="hover:bg-gray-100 dark:hover:bg-zinc-800 font-semibold"
             >
               <ChevronLeft size={20} />
@@ -98,7 +113,7 @@ export default function ReviewPage() {
         <div className="sticky top-0 z-50 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 mb-6 bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800 shadow-sm">
           <Button
             variant="ghost"
-            onClick={() => router.push("/")}
+            onClick={handleBackToHome}
             className="hover:bg-gray-100 dark:hover:bg-zinc-800 font-semibold"
           >
             <ChevronLeft size={20} />
@@ -179,7 +194,7 @@ export default function ReviewPage() {
                   <Button
                     variant="ghost"
                     size="icon-sm"
-                    onClick={() => removeItem(item.id)}
+                    onClick={() => handleRemoveItem(item.id)}
                     className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
                   >
                     <Trash2 size={18} />
@@ -189,7 +204,7 @@ export default function ReviewPage() {
                     <Button
                       variant="outline"
                       size="icon-sm"
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
                       className="h-8 w-8"
                     >
                       <Minus size={14} />
@@ -200,7 +215,7 @@ export default function ReviewPage() {
                     <Button
                       variant="outline"
                       size="icon-sm"
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
                       className="h-8 w-8"
                     >
                       <Plus size={14} />

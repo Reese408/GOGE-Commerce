@@ -101,30 +101,38 @@ function SearchDropdownContent({ placeholder = "Search products..." }: SearchDro
   const allProductsData = allProductsResponse?.data?.products?.edges?.map((edge: any) => edge.node);
 
   // Generate autocomplete suggestions based on input and available products/collections
+  // Optimized with Set for O(1) lookup instead of O(n) includes
   const autocompleteOptions = useMemo(() => {
     if (query.length < 2) return [];
 
+    const suggestionsSet = new Set<string>();
     const suggestions: string[] = [];
 
     // Add matching product titles
     if (allProductsData) {
-      allProductsData.forEach((product: ShopifyProduct) => {
+      for (const product of allProductsData) {
+        if (suggestions.length >= 5) break; // Early exit
         const similarity = calculateSimilarity(product.title, query);
-        if (similarity > 40 && !suggestions.includes(product.title)) {
+        if (similarity > 40 && !suggestionsSet.has(product.title)) {
+          suggestionsSet.add(product.title);
           suggestions.push(product.title);
         }
-      });
+      }
     }
 
-    // Add suggested searches that match
-    SUGGESTED_SEARCHES.forEach((term) => {
-      const similarity = calculateSimilarity(term, query);
-      if (similarity > 40 && !suggestions.includes(term)) {
-        suggestions.push(term);
+    // Add suggested searches that match (only if we need more)
+    if (suggestions.length < 5) {
+      for (const term of SUGGESTED_SEARCHES) {
+        if (suggestions.length >= 5) break;
+        const similarity = calculateSimilarity(term, query);
+        if (similarity > 40 && !suggestionsSet.has(term)) {
+          suggestionsSet.add(term);
+          suggestions.push(term);
+        }
       }
-    });
+    }
 
-    return suggestions.slice(0, 5);
+    return suggestions;
   }, [query, allProductsData]);
 
   const products = useMemo(() => {

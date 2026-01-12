@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, memo } from "react";
 import { ShoppingCart, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/lib/store/cart-store";
@@ -15,7 +15,7 @@ interface AddToCartButtonProps {
   variant?: ProductVariant;
 }
 
-export function AddToCartButton({ product, size, disabled = false, variant }: AddToCartButtonProps) {
+const AddToCartButtonComponent = ({ product, size, disabled = false, variant }: AddToCartButtonProps) => {
   const { addItem, openCart, items } = useCartStore();
   const [added, setAdded] = useState(false);
 
@@ -114,6 +114,7 @@ export function AddToCartButton({ product, size, disabled = false, variant }: Ad
     >
       <motion.div
         className="flex items-center justify-center gap-2"
+        initial={false}
         animate={added ? { scale: [1, 1.2, 1] } : {}}
         transition={{ duration: 0.3 }}
       >
@@ -131,4 +132,9 @@ export function AddToCartButton({ product, size, disabled = false, variant }: Ad
       </motion.div>
     </Button>
   );
-}
+};
+
+AddToCartButtonComponent.displayName = "AddToCartButton";
+
+// Export memoized version to prevent unnecessary re-renders
+export const AddToCartButton = memo(AddToCartButtonComponent);

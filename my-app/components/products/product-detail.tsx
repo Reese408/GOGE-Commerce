@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { ChevronLeft, Check, Ruler, X } from "lucide-react";
@@ -36,6 +36,100 @@ export function ProductDetail({ productId }: ProductDetailProps) {
     }
   }, [product, selectedVariant]);
 
+  // Memoize derived values (must be before early returns!)
+  const images = product?.images.edges || [];
+  const variants = product?.variants.edges.map((edge) => edge.node) || [];
+  const currentImage = images[selectedImage]?.node;
+
+  const formattedPrice = selectedVariant
+    ? new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: selectedVariant.price.currencyCode,
+      }).format(parseFloat(selectedVariant.price.amount))
+    : "";
+
+  // Memoize product weight calculation
+  const productWeight = useMemo(() => {
+    const titleLower = product?.title.toLowerCase() || "";
+
+    if (titleLower.includes("hoodie")) {
+      return PRODUCT_WEIGHTS.HOODIE;
+    }
+    if (titleLower.includes("sticker")) {
+      return PRODUCT_WEIGHTS.STICKER;
+    }
+    if (titleLower.includes("shirt") || titleLower.includes("tee") || titleLower.includes("t-shirt")) {
+      return PRODUCT_WEIGHTS.TSHIRT;
+    }
+    return PRODUCT_WEIGHTS.DEFAULT;
+  }, [product?.title]);
+
+  // Memoize add to cart handler
+  const handleAddToCart = useCallback(() => {
+    if (!selectedVariant || !product) return;
+
+    const quantityAvailable = selectedVariant.quantityAvailable ?? 0;
+    if (!selectedVariant.availableForSale || quantityAvailable <= 0) {
+      toast.error("This item is out of stock");
+      return;
+    }
+
+    addItem({
+      id: selectedVariant.id,
+      productId: product.id,
+      handle: product.handle,
+      title: product.title,
+      price: parseFloat(selectedVariant.price.amount),
+      currencyCode: selectedVariant.price.currencyCode,
+      quantity: 1,
+      imageUrl: currentImage?.url,
+      variant: {
+        id: selectedVariant.id,
+        title: selectedVariant.title,
+      },
+      weight: productWeight,
+      quantityAvailable: selectedVariant.quantityAvailable,
+    });
+
+    setAdded(true);
+    setTimeout(() => setAdded(false), 2000);
+    openCart();
+  }, [selectedVariant, product, currentImage, productWeight, addItem, openCart]);
+
+  // Memoize variant lookup map (eliminates O(n²) complexity in size selector)
+  const variantBySizeMap = useMemo(() => {
+    const map = new Map<string, ProductVariant>();
+    variants.forEach((variant) => {
+      const sizeOption = variant.selectedOptions.find((opt) => opt.name === "Size");
+      const sizeKey = sizeOption ? sizeOption.value : variant.title;
+      map.set(sizeKey, variant);
+    });
+    return map;
+  }, [variants]);
+
+  // Memoize size options extraction
+  const sizeOptions = useMemo(() => {
+    return Array.from(variantBySizeMap.keys());
+  }, [variantBySizeMap]);
+
+  // Memoize image change handler
+  const handleImageChange = useCallback((index: number) => {
+    setSelectedImage(index);
+    setImageLoading(true);
+  }, []);
+
+  // Memoize variant selection handler
+  const handleVariantSelect = useCallback((size: string) => {
+    const variant = variants.find((v) => {
+      const sizeOption = v.selectedOptions.find((opt) => opt.name === "Size");
+      return sizeOption ? sizeOption.value === size : v.title === size;
+    });
+    if (variant) {
+      setSelectedVariant(variant);
+    }
+  }, [variants]);
+
+  // Early returns AFTER all hooks
   if (isLoading) {
     return <LoadingSpinner />;
   }
@@ -55,84 +149,6 @@ export function ProductDetail({ productId }: ProductDetailProps) {
       </div>
     );
   }
-
-  const images = product.images.edges;
-  const variants = product.variants.edges.map((edge) => edge.node);
-  const currentImage = images[selectedImage]?.node;
-
-  const formattedPrice = selectedVariant
-    ? new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: selectedVariant.price.currencyCode,
-      }).format(parseFloat(selectedVariant.price.amount))
-    : "";
-
-  const handleAddToCart = () => {
-    if (!selectedVariant) return;
-
-    // Check if variant is available for sale and has stock
-    const quantityAvailable = selectedVariant.quantityAvailable ?? 0;
-    if (!selectedVariant.availableForSale || quantityAvailable <= 0) {
-      toast.error("This item is out of stock");
-      return;
-    }
-
-    // Determine product weight based on product title
-    const getProductWeight = (): number => {
-      const titleLower = product.title.toLowerCase();
-
-      // Check for hoodies
-      if (titleLower.includes("hoodie")) {
-        return PRODUCT_WEIGHTS.HOODIE;
-      }
-
-      // Check for stickers
-      if (titleLower.includes("sticker")) {
-        return PRODUCT_WEIGHTS.STICKER;
-      }
-
-      // Check for t-shirts (default for apparel)
-      if (
-        titleLower.includes("shirt") ||
-        titleLower.includes("tee") ||
-        titleLower.includes("t-shirt")
-      ) {
-        return PRODUCT_WEIGHTS.TSHIRT;
-      }
-
-      // Default weight for unknown items
-      return PRODUCT_WEIGHTS.DEFAULT;
-    };
-
-    addItem({
-      id: selectedVariant.id,
-      productId: product.id,
-      handle: product.handle,
-      title: product.title,
-      price: parseFloat(selectedVariant.price.amount),
-      currencyCode: selectedVariant.price.currencyCode,
-      quantity: 1,
-      imageUrl: currentImage?.url,
-      variant: {
-        id: selectedVariant.id,
-        title: selectedVariant.title,
-      },
-      weight: getProductWeight(),
-      quantityAvailable: selectedVariant.quantityAvailable,
-    });
-
-    setAdded(true);
-    setTimeout(() => setAdded(false), 2000);
-    openCart();
-  };
-
-  // Extract size options from variants
-  const sizeOptions = variants
-    .map((variant) => {
-      const sizeOption = variant.selectedOptions.find((opt) => opt.name === "Size");
-      return sizeOption ? sizeOption.value : variant.title;
-    })
-    .filter((value, index, self) => self.indexOf(value) === index);
 
   return (
     <div className="min-h-screen bg-white dark:bg-zinc-950 py-8">
@@ -189,10 +205,7 @@ export function ProductDetail({ productId }: ProductDetailProps) {
                 {images.slice(0, 4).map((img, index) => (
                   <button
                     key={index}
-                    onClick={() => {
-                      setSelectedImage(index);
-                      setImageLoading(true);
-                    }}
+                    onClick={() => handleImageChange(index)}
                     className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
                       selectedImage === index
                         ? "border-[#927194] dark:border-[#D08F90]"
@@ -249,10 +262,7 @@ export function ProductDetail({ productId }: ProductDetailProps) {
 
                 <div className="grid grid-cols-4 gap-3">
                   {sizeOptions.map((size) => {
-                    const variant = variants.find((v) => {
-                      const sizeOpt = v.selectedOptions.find((opt) => opt.name === "Size");
-                      return (sizeOpt ? sizeOpt.value : v.title) === size;
-                    });
+                    const variant = variantBySizeMap.get(size);
 
                     const isSelected = selectedVariant?.id === variant?.id;
                     const quantityAvailable = variant?.quantityAvailable ?? 0;
@@ -270,7 +280,7 @@ export function ProductDetail({ productId }: ProductDetailProps) {
                         key={size}
                         whileHover={!isDisabled ? { scale: 1.05 } : {}}
                         whileTap={!isDisabled ? { scale: 0.95 } : {}}
-                        onClick={() => variant && !isDisabled && setSelectedVariant(variant)}
+                        onClick={() => !isDisabled && handleVariantSelect(size)}
                         disabled={isDisabled}
                         className={`relative py-3 px-4 rounded-lg border-2 font-semibold transition-all ${
                           isSelected

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -68,11 +68,13 @@ export function FeaturedSlideshow() {
     setProgress(0); // Reset progress when changing slides
   }, [currentSlide]);
 
-  // Progress bar animation
+  // Progress bar animation - Optimized with requestAnimationFrame
   useEffect(() => {
     if (!isPaused) {
       const startTime = Date.now();
-      const interval = setInterval(() => {
+      let rafId: number;
+
+      const updateProgress = () => {
         const elapsed = Date.now() - startTime;
         const newProgress = (elapsed / AUTO_ADVANCE_TIME) * 100;
 
@@ -80,15 +82,14 @@ export function FeaturedSlideshow() {
           nextSlide();
         } else {
           setProgress(newProgress);
+          rafId = requestAnimationFrame(updateProgress);
         }
-      }, 50); // Update every 50ms for smooth animation
+      };
 
-      return () => clearInterval(interval);
-    } else {
-      // Keep progress frozen when paused
-      setProgress((prev) => prev);
+      rafId = requestAnimationFrame(updateProgress);
+      return () => cancelAnimationFrame(rafId);
     }
-  }, [isPaused, currentSlide, nextSlide]);
+  }, [isPaused, currentSlide, nextSlide, AUTO_ADVANCE_TIME]);
 
   const slideVariants = {
     enter: (direction: number) => ({
@@ -125,8 +126,8 @@ export function FeaturedSlideshow() {
               animate="center"
               exit="exit"
               transition={{
-                x: { type: "spring", stiffness: 300, damping: 30 },
-                opacity: { duration: 0.2 },
+                x: { type: "tween", duration: 0.4, ease: "easeOut" },
+                opacity: { duration: 0.3 },
               }}
               className="absolute inset-0"
             >

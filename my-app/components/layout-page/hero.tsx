@@ -1,77 +1,37 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import { ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 export function Hero() {
-  const [mounted, setMounted] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Detect mobile and enable animations only after hydration
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    checkMobile();
-    setMounted(true);
-
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  const { scrollY } = useScroll();
-
-  // Disable scroll animations on mobile to prevent jank
-  const opacity = useTransform(
-    scrollY,
-    [0, 300],
-    (!mounted || isMobile) ? [1, 1] : [1, 0]
-  );
-
-  const scale = useTransform(
-    scrollY,
-    [0, 300],
-    (!mounted || isMobile) ? [1, 1] : [1, 0.9]
-  );
-
-  const y = useTransform(
-    scrollY,
-    [0, 300],
-    (!mounted || isMobile) ? [0, 0] : [0, -50]
-  );
-
   return (
-    <motion.section
-      style={isMobile ? {} : { opacity, scale }}
+    <section
       className="relative h-[100svh] flex items-center justify-center overflow-hidden
       bg-gradient-to-br from-[#F9F4C8] via-[#E8CFA9] to-[#D08F90]
       dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-800"
     >
-      {/* Background Orbs - Reduced animation complexity on mobile */}
+      {/* Background Orbs - Subtle CSS animations */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          animate={isMobile ? {} : { scale: [1, 1.2, 1], rotate: [0, 90, 0] }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+        <div
           className="absolute -top-1/2 -left-1/2 w-full h-full
           bg-gradient-to-br from-[#927194]/30 to-transparent
-          rounded-full blur-3xl"
+          rounded-full blur-3xl animate-[pulse_8s_ease-in-out_infinite]"
         />
-        <motion.div
-          animate={isMobile ? {} : { scale: [1.2, 1, 1.2], rotate: [90, 0, 90] }}
-          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+        <div
           className="absolute -bottom-1/2 -right-1/2 w-full h-full
           bg-gradient-to-tl from-[#A0B094]/30 to-transparent
-          rounded-full blur-3xl"
+          rounded-full blur-3xl animate-[pulse_10s_ease-in-out_infinite]"
+          style={{ animationDelay: '2s' }}
         />
       </div>
 
       {/* Hero Content */}
       <motion.div
-        style={isMobile ? {} : { y }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
         className="relative z-10 container mx-auto px-6 text-center"
       >
         <div className="space-y-8">
@@ -134,6 +94,6 @@ export function Hero() {
       {/* Bottom fade */}
       <div className="absolute bottom-0 left-0 right-0 h-32
         bg-gradient-to-t from-white dark:from-zinc-950 to-transparent" />
-    </motion.section>
+    </section>
   );
 }

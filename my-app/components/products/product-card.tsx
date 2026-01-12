@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { AddToCartButton } from "./add-to-cart-button";
 import { useCartStore } from "@/lib/store/cart-store";
 import { Loader2 } from "lucide-react";
@@ -109,12 +108,10 @@ export function ProductCard({ product, featured = false, priority = false }: Pro
     );
   }
 
-  // Grid layout for regular products - Gymshark style
+  // Grid layout for regular products - Optimized for INP
   return (
-    <motion.div
-      whileHover={{ scale: 1.02 }}
-      transition={{ type: "spring", stiffness: 300, damping: 25 }}
-      className="group bg-white dark:bg-zinc-900 overflow-hidden"
+    <div
+      className="group bg-white dark:bg-zinc-900 overflow-hidden transition-transform duration-200 hover:scale-[1.02]"
     >
       <Link href={`/products/${product.handle}`}>
         {/* Product Image */}
@@ -230,6 +227,6 @@ export function ProductCard({ product, featured = false, priority = false }: Pro
           </div>
         </div>
       </Link>
-    </motion.div>
+    </div>
   );
 }

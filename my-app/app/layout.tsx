@@ -21,24 +21,26 @@ const geistMono = Geist_Mono({
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://graceongoing.com";
 const siteName = "Grace, Ongoing";
-const siteDescription = "Discover curated fashion and timeless style at Grace, Ongoing. Shop our exclusive collection of clothing, accessories, and more.";
+const siteDescription = "Handmade Christian apparel with faith-inspired designs. Shop our collection of t-shirts, hoodies, and accessories that spread God's message of love, grace, and hope.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: `${siteName} | Hand Made Christian Apparel`,
+    default: `${siteName} | Handmade Christian Apparel`,
     template: `%s | ${siteName}`,
   },
   description: siteDescription,
   keywords: [
-    "fashion",
-    "clothing",
-    "accessories",
-    "style",
-    "curated fashion",
-    "women's fashion",
-    "online boutique",
+    "christian apparel",
+    "faith-based clothing",
+    "handmade christian shirts",
+    "religious t-shirts",
+    "christian hoodies",
+    "faith-inspired designs",
+    "christian accessories",
     "Grace Ongoing",
+    "christian gifts",
+    "inspirational clothing",
   ],
   authors: [{ name: siteName }],
   creator: siteName,
@@ -53,21 +55,21 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: siteUrl,
     siteName,
-    title: `${siteName} | Curated Fashion & Timeless Style`,
+    title: `${siteName} | Handmade Christian Apparel`,
     description: siteDescription,
     images: [
       {
         url: `${siteUrl}/og-image.png`,
         width: 1200,
         height: 630,
-        alt: `${siteName} - Curated Fashion`,
+        alt: `${siteName} - Handmade Christian Apparel`,
         type: "image/png",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: `${siteName} | Curated Fashion & Timeless Style`,
+    title: `${siteName} | Handmade Christian Apparel`,
     description: siteDescription,
     images: [`${siteUrl}/og-image.png`],
     creator: "@graceongoing",
