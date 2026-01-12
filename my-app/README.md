@@ -1,36 +1,79 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Grace, Ongoing
 
-## Getting Started
+A headless e-commerce storefront for a Christian apparel brand, built with Next.js 16 and Shopify's Storefront API.
 
-First, run the development server:
+**Live Site:** [graceongoing.com](https://graceongoing.com)
+
+## Tech Stack
+
+- **Frontend:** Next.js 16 (App Router), React 19, TypeScript
+- **Styling:** Tailwind CSS 4 with dark mode support
+- **State:** Zustand (cart) + React Query (API caching)
+- **Backend:** Shopify Storefront API (GraphQL), Resend (email)
+- **Infrastructure:** Vercel, AWS S3
+
+## Key Features
+
+**E-Commerce**
+- Full product catalog with variant selection, real-time inventory, and persistent cart
+- Fuzzy search powered by Fuse.js
+- Shopify-hosted checkout with automatic redirect
+
+**Performance**
+- React Server Components for fast initial loads and SEO
+- ISR with 60-second revalidation for product data
+- Native CSS animations (removed Framer Motion, reduced INP by 84%)
+- Optimized images via Next.js with AVIF/WebP formats
+
+**Developer Experience**
+- Strict TypeScript throughout
+- Structured data (JSON-LD) for product SEO
+- Dynamic sitemap generation
+- Content Security Policy headers
+
+## Performance Results
+
+| Metric | Improvement |
+|--------|-------------|
+| INP (Shop page) | 2552ms → 400ms (84% reduction) |
+| Bundle size | Removed 3.3MB from critical path |
+| Lighthouse Performance | 95+ |
+
+## System Design
+
+**Hosting & Deployment**
+- Vercel for hosting with automatic CI/CD from GitHub pushes
+- Vercel Analytics and Speed Insights for Web Vitals monitoring
+- Squarespace domain with DNS pointed to Vercel
+
+**Media Storage**
+- AWS S3 bucket for product images and videos
+- Next.js Image component optimizes S3 assets on-the-fly (AVIF/WebP conversion, responsive sizing)
+- Cloudflare in front of S3 for CDN caching and reduced latency
+
+**Email Infrastructure**
+- Resend handles transactional emails from the contact form
+- Email forwarding configured so `support@graceongoing.com` routes to business inbox
+- Server-side API route keeps credentials secure
+
+**Shopify Integration**
+- Headless setup: Shopify manages inventory, payments, and fulfillment—Next.js handles the storefront
+- GraphQL queries fetch products, variants, pricing, and real-time stock levels
+- Cart state lives client-side (Zustand + localStorage); checkout redirects to Shopify's hosted checkout
+- No Shopify theme code—full control over UI/UX while Shopify handles the hard parts
+
+## Local Development
 
 ```bash
+npm install
+cp .env.example .env.local  # Add Shopify + Resend credentials
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Requires Node.js 20+ and Shopify Storefront API access.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**[graceongoing.com](https://www.graceongoing.com)**
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Built by Reese · [GitHub](https://github.com/Reese408) · [Portfolio](https://reeseredman.com)

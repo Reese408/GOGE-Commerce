@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import { ChevronLeft, Loader2, ShoppingBag, Trash2, Plus, Minus, AlertCircle } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -153,10 +152,9 @@ export default function ReviewPage() {
 
           <div className="space-y-4">
             {items.map((item) => (
-              <motion.div
+              <div
                 key={item.id}
-                layout
-                className="flex gap-4 p-4 bg-gray-50 dark:bg-zinc-800 rounded-lg"
+                className="flex gap-4 p-4 bg-gray-50 dark:bg-zinc-800 rounded-lg transition-all duration-200"
               >
                 {/* Product Image */}
                 {item.imageUrl && (
@@ -222,7 +220,7 @@ export default function ReviewPage() {
                     </Button>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>

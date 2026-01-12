@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo, useCallback, memo } from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
 import { X, Plus, Minus, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -179,25 +178,18 @@ function CartSidebarContent() {
   }, [closeCart, router]);
 
   return (
-    <AnimatePresence>
+    <>
       {isOpen && (
         <>
           {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          <div
             onClick={closeCart}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 animate-fade-in"
           />
 
-          {/* Cart Modal - Slide up from bottom on mobile (with top gap), sidebar on desktop */}
-          <motion.div
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 top-16 md:top-0 md:right-0 md:left-auto md:bottom-0 w-full md:w-112.5 bg-white dark:bg-zinc-900 shadow-2xl z-50 flex flex-col rounded-t-2xl md:rounded-none"
+          {/* Cart Modal - Slide up from bottom on mobile (with top gap), slide from right on desktop */}
+          <div
+            className="fixed bottom-0 left-0 right-0 top-16 md:top-0 md:right-0 md:left-auto md:bottom-0 w-full md:w-112.5 bg-white dark:bg-zinc-900 shadow-2xl z-50 flex flex-col rounded-t-2xl md:rounded-none animate-slide-in-mobile md:animate-slide-in-right"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-zinc-800">
@@ -353,10 +345,10 @@ function CartSidebarContent() {
 
             {/* Undo Toast - Inside cart sidebar */}
             <UndoToast />
-          </motion.div>
+          </div>
         </>
       )}
-    </AnimatePresence>
+    </>
   );
 }
 

@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Image from "next/image";
-import { motion } from "framer-motion";
 import { ChevronLeft, Check, Ruler, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -276,13 +275,13 @@ export function ProductDetail({ productId }: ProductDetailProps) {
                     const isDisabled = !isAvailable || allStockInCart;
 
                     return (
-                      <motion.button
+                      <button
                         key={size}
-                        whileHover={!isDisabled ? { scale: 1.05 } : {}}
-                        whileTap={!isDisabled ? { scale: 0.95 } : {}}
                         onClick={() => !isDisabled && handleVariantSelect(size)}
                         disabled={isDisabled}
                         className={`relative py-3 px-4 rounded-lg border-2 font-semibold transition-all ${
+                          !isDisabled ? "hover:scale-105 active:scale-95" : ""
+                        } ${
                           isSelected
                             ? "border-[#927194] bg-[#927194]/10 text-[#927194] dark:border-[#D08F90] dark:bg-[#D08F90]/10 dark:text-[#D08F90]"
                             : !isDisabled
@@ -304,7 +303,7 @@ export function ProductDetail({ productId }: ProductDetailProps) {
                             strokeWidth={3}
                           />
                         )}
-                      </motion.button>
+                      </button>
                     );
                   })}
                 </div>
@@ -330,14 +329,10 @@ export function ProductDetail({ productId }: ProductDetailProps) {
                     title={allStockInCart ? "All available stock in cart" : ""}
                   >
                     {added ? (
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="flex items-center gap-2"
-                      >
+                      <div className="flex items-center gap-2 animate-scale-bounce">
                         <Check size={20} />
                         Added to Cart!
-                      </motion.div>
+                      </div>
                     ) : allStockInCart ? (
                       "All Stock in Cart"
                     ) : selectedVariant?.availableForSale ? (

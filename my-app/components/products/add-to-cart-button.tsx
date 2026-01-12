@@ -4,7 +4,6 @@ import { useState, memo } from "react";
 import { ShoppingCart, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/lib/store/cart-store";
-import { motion } from "framer-motion";
 import { PRODUCT_WEIGHTS } from "@/lib/constants";
 import type { AddToCartProductData, ProductVariant } from "@/lib/types";
 
@@ -112,11 +111,10 @@ const AddToCartButtonComponent = ({ product, size, disabled = false, variant }: 
       } text-white`}
       title={allStockInCart ? "All available stock in cart" : disabled ? "Out of stock" : ""}
     >
-      <motion.div
-        className="flex items-center justify-center gap-2"
-        initial={false}
-        animate={added ? { scale: [1, 1.2, 1] } : {}}
-        transition={{ duration: 0.3 }}
+      <div
+        className={`flex items-center justify-center gap-2 transition-transform duration-300 ${
+          added ? "animate-scale-bounce" : ""
+        }`}
       >
         {added ? (
           <>
@@ -129,7 +127,7 @@ const AddToCartButtonComponent = ({ product, size, disabled = false, variant }: 
             {isDisabled ? "Out of Stock" : "Add to Cart"}
           </>
         )}
-      </motion.div>
+      </div>
     </Button>
   );
 };
