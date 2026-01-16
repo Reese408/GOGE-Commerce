@@ -1,19 +1,44 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useRef } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 export function Hero() {
+  const sectionRef = useRef<HTMLElement>(null);
+
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start start", "end start"],
+  });
+
+  // Fade out as user scrolls down (1 -> 0 over scroll progress)
+  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  // Slight upward movement as it fades
+  const y = useTransform(scrollYProgress, [0, 0.5], [0, -50]);
+  // Background fades out to reveal page background
+  const bgOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
+
   return (
     <section
+      ref={sectionRef}
       className="relative h-[100svh] flex items-center justify-center overflow-hidden
-      bg-gradient-to-br from-[#F9F4C8] via-[#E8CFA9] to-[#D08F90]
-      dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-800"
+      bg-white dark:bg-zinc-950"
     >
+      {/* Animated gradient background */}
+      <motion.div
+        style={{ opacity: bgOpacity }}
+        className="absolute inset-0 bg-gradient-to-br from-[#F9F4C8] via-[#E8CFA9] to-[#D08F90]
+        dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-800"
+      />
+
       {/* Background Orbs - Subtle CSS animations */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <motion.div
+        style={{ opacity: bgOpacity }}
+        className="absolute inset-0 overflow-hidden pointer-events-none"
+      >
         <div
           className="absolute -top-1/2 -left-1/2 w-full h-full
           bg-gradient-to-br from-[#927194]/30 to-transparent
@@ -25,13 +50,14 @@ export function Hero() {
           rounded-full blur-3xl animate-[pulse_10s_ease-in-out_infinite]"
           style={{ animationDelay: '2s' }}
         />
-      </div>
+      </motion.div>
 
       {/* Hero Content */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
+        style={{ opacity, y }}
         className="relative z-10 container mx-auto px-6 text-center"
       >
         <div className="space-y-8">
